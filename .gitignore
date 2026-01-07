@@ -195,3 +195,4 @@ cython_debug/
 
 src/.vscode
 src/.micropico
+src/secrets.py

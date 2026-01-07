@@ -1,5 +1,5 @@
 import time
-from machine import Pin, ADC
+from machine import Pin, ADC # type: ignore
 
 
 class Button:

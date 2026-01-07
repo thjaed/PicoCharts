@@ -1,7 +1,7 @@
 # This code is mostly from pimoroni
 # https://github.com/pimoroni/pimoroni-pico/blob/main/micropython/examples/pimoroni_pico_lipo/battery_pico_display.py
 
-from machine import ADC, Pin
+from machine import ADC, Pin # type: ignore
 
 vsys = ADC(Pin(29))                 # reads the system input voltage
 power_connected = Pin(24, Pin.IN)   # reading GP24 tells us whether or not USB power is connected
