@@ -196,3 +196,5 @@ cython_debug/
 src/.vscode
 src/.micropico
 src/secrets.py
+test_data.json
+.DS_Store

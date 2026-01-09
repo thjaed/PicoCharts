@@ -22,6 +22,7 @@ GREY = display.create_pen(80, 80, 80)
 DARK_GREY = display.create_pen(60, 60, 60)
 BLACK = display.create_pen(0, 0, 0)
 GREEN = display.create_pen(0, 255, 0)
+RED = display.create_pen(255, 0, 0)
 
 def setup():
     global page, display
@@ -45,6 +46,11 @@ def screen_off():
 
 def screen_on():
     display.set_backlight(brightness)
+
+def cleanup():
+    display.clear()
+    led.set_rgb(0, 0, 0)
+
 
 class MenuBar:
     def draw(self):
@@ -106,10 +112,11 @@ class Timetable:
         with open("timetable.jsonl", "r") as f:
             self.content_height = 0
             self.box_heights = []
+            
+            lessons_to_display = False
+            
             for l in f:
                 l = ujson.loads(l) # load into json format
-                
-                lessons_to_display = False
                 
                 if clock.clock_str_to_secs(l.get("end_time")) > clock.clock_str_to_secs(clock.get_clock(utime.time())):
                     lessons_to_display = True
@@ -175,6 +182,7 @@ class Timetable:
                         self.draw()
                         return
 
+
                     curr_height += box_height # Move on to next box coords (y value)
 
             elif direction == "up":
@@ -193,9 +201,55 @@ class Timetable:
 
                     curr_height += box_height # Move on to next box coords (y value)
 
+class Behaviour:
+    def go(self):
+        if v: print("Going to behaviour page")
+        global page
+        page = "behaviour"
+        display.set_pen(GREY)
+        display.clear()
+        self.scroll_distance = 0
+        self.draw()
+        bar.draw()
+    
+    def draw(self):
+        display.set_pen(GREY)
+        display.clear()
+
+        if "behaviour.jsonl" not in os.listdir():
+            message.show("No behaviour file, generating one", change_page=False)
+            classcharts.save_behaviour()
+        
+        with open("behaviour.jsonl", "r") as f:
+            for l in f:
+                l = ujson.loads(l)
+                positives = str(l.get("positive"))
+                negatives = f"-{str(l.get("negative"))}" if l.get("negative") > 0 else str(l.get("negative")) # add - sign in front of negative points
+        
+        print(f"Positives: {positives} Negatives: {negatives}")
+        
+        display.set_pen(GREEN)
+        display.rectangle(0, 0, 160, 240)
+        
+        display.set_pen(RED)
+        display.rectangle(160, 0, 160, 240)
+
+        display.set_pen(WHITE)
+
+        text_width = display.measure_text("Positives", scale=2)
+        display.text("Positives", (80 - int(text_width / 2)), 80, scale=2)
+        text_width = display.measure_text(positives, scale=4)
+        display.text(positives, (80 - int(text_width / 2)), 120, scale=4)
+
+        text_width = display.measure_text("Negatives", scale=2)
+        display.text("Negatives", 160 + (80 - int(text_width / 2)), 80, scale=2)
+        text_width = display.measure_text(negatives, scale=4)
+        display.text(negatives, 160 + (80 - int(text_width / 2)), 120, scale=4)
+        
+    
 class Menu:
     def __init__(self):
-        self.entries = ["Timetable", "Refresh Data", "Say hello world"]
+        self.entries = ["Timetable", "Behaviour", "Refresh Data"]
         self.selected = 0
         
     def go(self):
@@ -239,13 +293,12 @@ class Menu:
         if name == "Timetable":
             timetable.go()
         
+        elif name == "Behaviour":
+            behaviour.go()
+            
         elif name == "Refresh Data":
             message.show("Getting data from ClassCharts")
-            classcharts.save_timetable(clock.get_date_cc_api(utime.time()))
-            timetable.go()
-        
-        elif name == "Say hello world":
-            message.show("hello world")
+            classcharts.save_data()
             timetable.go()
 
 class Message:
@@ -271,5 +324,6 @@ class Message:
 
 message = Message()
 timetable = Timetable()
+behaviour = Behaviour()
 bar = MenuBar()
 menu = Menu()

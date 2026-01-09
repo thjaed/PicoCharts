@@ -8,12 +8,18 @@ import secrets
 class ClassCharts:
     def login(self):
         # Authenticate with ClassCharts API
-        self.client = StudentClient(code=secrets.CC_CODE, dob=secrets.CC_DOB)
-    
-    def save_timetable(self, date_str=clock.get_date_cc_api()):
-        print("Saving timetable to file")
         if v: print("Authenticating with ClassCharts")
+        self.client = StudentClient(code=secrets.CC_CODE, dob=secrets.CC_DOB)
+
+    def save_data(self):
         self.login()
+        self.save_timetable(login=False)
+        self.save_behaviour(login=False)
+        
+    
+    def save_timetable(self, date_str=clock.get_date_cc_api(), login=True):
+        print("Saving timetable to file...")
+        if login: self.login()
         # Query API
         if v: print("Getting Timetable")
         response = self.client.get_lessons(date=date_str)
@@ -57,3 +63,36 @@ class ClassCharts:
                 ujson.dump(event, f)
                 f.write("\n")
         print("Done saving timetable to file")
+        
+    def save_behaviour(self, from_date="2025-08-01", to_date=clock.get_date_cc_api("YYYY-MM-DD"), login=True):
+        print("Saving behaviour to file...")
+        if login: self.login()
+        # Query API
+        if v: print("Getting behaviour")
+        response = self.client.get_behaviour(from_date=from_date, to_date=to_date)
+        
+        behaviour = response["data"]
+
+        total_positive = 0
+        total_negative = 0
+        
+        # Loop through points for each reason and sum them together to get total
+        for i in behaviour["negative_reasons"]:
+            total_negative += behaviour["negative_reasons"][i]
+            
+        for i in behaviour["positive_reasons"]:
+            total_positive += behaviour["positive_reasons"][i]
+        
+        # Store in json format
+        data_json = {
+            "positive": total_positive,
+            "negative": total_negative
+        }
+
+        print(f"Positives: {total_positive} Negatives: {total_negative}")
+
+        if v: print("Writing behaviour to behaviour.jsonl")
+        # Save data to file
+        with open("behaviour.jsonl", "w") as f:
+            ujson.dump(data_json, f)
+        print("Done saving behaviour to file")

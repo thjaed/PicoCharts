@@ -1,5 +1,6 @@
 import asyncio
 import utime # type: ignore
+import sys
 
 from pybuttons import Button
 from ui import Menu, MenuBar, Timetable
@@ -37,7 +38,7 @@ def press_handler(btn, pattern):
 
             if btn.get_id() == BUTTON_B:
                 if v: print("Button B")
-                if ui.page == "timetable": # Go to menu page
+                if ui.page != "menu": # Go to menu page
                     menu.go()
                 elif ui.page == "menu": # Go to timetable page
                     timetable.go()
@@ -95,7 +96,7 @@ def init():
     print("Starting...")
     wifi.wifi_connect()
     clock.set_time_ntp()
-    classcharts.save_timetable(clock.get_date_cc_api())
+    classcharts.save_data()
 
 async def main():
     init()
@@ -110,10 +111,13 @@ async def main():
     print("Finished startup")
     
     while True:
-        # Refresh screen if awake
-        if not sleeping:
-            ui.update()
-        await asyncio.sleep_ms(display_update_time)
+        try:
+            # Refresh screen if awake
+            if not sleeping:
+                ui.update()
+            await asyncio.sleep_ms(display_update_time)
+        except KeyboardInterrupt:
+            ui.cleanup()
 
 # Button setup
 PINS = [12, 13, 14, 15]

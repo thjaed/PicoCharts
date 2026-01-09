@@ -1,5 +1,5 @@
-import urequests
-import utime
+import urequests # type: ignore
+import utime # type: ignore
 
 BASE_URL = "https://www.classcharts.com/apiv2student"
 

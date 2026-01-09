@@ -5,7 +5,6 @@ import ustruct # type: ignore
 
 import config
 
-
 cal_generated_today = False
 # Months and days as strings for displaying date
 months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -29,15 +28,18 @@ def get_date(secs=utime.time()): # Returns a date string from timestamp
 
     return f"{day} {time[2]} {month}"
     
-def get_date_cc_api(secs=utime.time()):
-    # Returns date as a string in YYYY-MM-DD as needed by the classchars API
+def get_date_cc_api(format="DD-MM-YYYY", secs=utime.time()):
+    # Returns date as a string in DD-MM-YYYY as needed by the classchars API
     time = utime.localtime(secs)
         
     day = str(time[2]) if time[2] > 9 else f"0{time[2]}"
     month = str(time[1]) if time[1] > 9 else f"0{time[1]}"
     year = time[0]
-        
-    return f"{day}-{month}-{year}"
+    
+    if format == "DD-MM-YYYY":
+        return f"{day}-{month}-{year}"
+    elif format == "YYYY-MM-DD":
+        return f"{year}-{month}-{day}"
     
 def clock_str_to_secs(clock_str):
     # Returns mins passed in a day from a time in HH:MM form
