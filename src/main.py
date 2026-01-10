@@ -3,7 +3,7 @@ import utime # type: ignore
 import sys
 
 from pybuttons import Button
-from ui import Menu, MenuBar, Timetable
+from ui import Menu, MenuBar, Timetable, Behaviour
 import ui
 from classcharts import ClassCharts
 import clock
@@ -14,6 +14,7 @@ from config import VERBOSE_OUTPUT as v
 menu = Menu()
 bar = MenuBar()
 timetable = Timetable()
+behaviour = Behaviour()
 classcharts = ClassCharts()
 
 cal_generated_today = False
@@ -35,6 +36,9 @@ def press_handler(btn, pattern):
                 if v: print("Button A")
                 if ui.page == "menu":
                     menu.exec() # Run the code associated with the button
+                elif ui.page == "behaviour":
+                    behaviour.toggle_time_range()
+                    behaviour.draw()
 
             if btn.get_id() == BUTTON_B:
                 if v: print("Button B")

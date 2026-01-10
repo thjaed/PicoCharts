@@ -95,8 +95,6 @@ class Timetable:
         if v: print("Going to timetable page")
         global page
         page = "timetable"
-        display.set_pen(GREY)
-        display.clear()
         self.scroll_distance = 0
         self.draw()
         bar.draw()
@@ -203,15 +201,21 @@ class Timetable:
                     curr_height += box_height # Move on to next box coords (y value)
 
 class Behaviour:
+    def __init__(self):
+        self.time_ranges = ["august", "this_week", "last_week"]
+        self.time_range = 0
+
     def go(self):
         if v: print("Going to behaviour page")
         global page
         page = "behaviour"
-        display.set_pen(GREY)
-        display.clear()
-        self.scroll_distance = 0
         self.draw()
-        bar.draw()
+    
+    def toggle_time_range(self):
+        if self.time_range < len(self.time_ranges) - 1:
+            self.time_range += 1
+        else:
+            self.time_range = 0
     
     def draw(self):
         display.set_pen(GREY)
@@ -224,8 +228,9 @@ class Behaviour:
         with open("behaviour.jsonl", "r") as f:
             for l in f:
                 l = ujson.loads(l)
-                positives = str(l.get("positive"))
-                negatives = f"-{str(l.get("negative"))}" if l.get("negative") > 0 else str(l.get("negative")) # add - sign in front of negative points
+                if l.get("time") == self.time_ranges[self.time_range]:
+                    positives = str(l.get("positive"))
+                    negatives = f"-{str(l.get("negative"))}" if l.get("negative") > 0 else str(l.get("negative")) # add - sign in front of negative points
         
         print(f"Positives: {positives} Negatives: {negatives}")
         
@@ -246,7 +251,22 @@ class Behaviour:
         display.text("Negatives", 160 + (80 - int(text_width / 2)), 80, scale=2)
         text_width = display.measure_text(negatives, scale=4)
         display.text(negatives, 160 + (80 - int(text_width / 2)), 120, scale=4)
+
+        if self.time_ranges[self.time_range] == "august":
+            text = "Since August"
+        elif self.time_ranges[self.time_range] == "this_week":
+                text = "This Week"
+        elif self.time_ranges[self.time_range] == "last_week":
+                text = "Last Week"
         
+        text_width = display.measure_text(text, scale=2)
+        display.set_pen(WHITE)
+        display.rectangle((160 - (text_width // 2)) - 5, 200 - 5, text_width + 10, 20)
+
+        display.set_pen(BLACK)
+        display.text(text, (160 - (text_width // 2)), 200 - 2, scale=2)
+
+        bar.draw()
     
 class Menu:
     def __init__(self):

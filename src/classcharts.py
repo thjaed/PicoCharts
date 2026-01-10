@@ -71,30 +71,44 @@ class ClassCharts:
         if login: self.login()
         # Query API
         if v: print("Getting behaviour")
-        response = self.client.get_behaviour(from_date=from_date, to_date=to_date)
-        
-        behaviour = response["data"]
 
-        total_positive = 0
-        total_negative = 0
-        
-        # Loop through points for each reason and sum them together to get total
-        for i in behaviour["negative_reasons"]:
-            total_negative += behaviour["negative_reasons"][i]
-            
-        for i in behaviour["positive_reasons"]:
-            total_positive += behaviour["positive_reasons"][i]
-        
-        # Store in json format
-        data_json = {
-            "positive": total_positive,
-            "negative": total_negative
-        }
+        behaviour = []
+        times = ["august", "this_week", "last_week"]
 
-        print(f"Positives: {total_positive} Negatives: {total_negative}")
+        for time in times:
+            if time == "august":
+                response = self.client.get_behaviour(from_date=clock.august(), to_date=clock.today())
+            elif time == "this_week":
+                response = self.client.get_behaviour(from_date=clock.this_monday(), to_date=clock.today())
+            elif time == "last_week":
+                last_week = clock.last_week()
+                response = self.client.get_behaviour(from_date=last_week[0], to_date=last_week[1])
+
+            data = response["data"]
+
+            total_positive = 0
+            total_negative = 0
+
+            # Loop through points for each reason and sum them together to get total
+            for i in data["negative_reasons"]:
+                total_negative += data["negative_reasons"][i]
+
+            for i in data["positive_reasons"]:
+                total_positive += data["positive_reasons"][i]
+
+            # Store in json format
+            behaviour.append({
+                "time": time,
+                "positive": total_positive,
+                "negative": total_negative
+            })
+
+            print(f"{time}: Positives: {total_positive} Negatives: {total_negative}")
 
         if v: print("Writing behaviour to behaviour.jsonl")
         # Save data to file
         with open("behaviour.jsonl", "w") as f:
-            ujson.dump(data_json, f)
+            for line in behaviour:
+                ujson.dump(line, f)
+                f.write("\n")
         print("Done saving behaviour to file")
