@@ -111,13 +111,10 @@ async def main():
     print("Finished startup")
     
     while True:
-        try:
-            # Refresh screen if awake
-            if not sleeping:
-                ui.update()
-            await asyncio.sleep_ms(display_update_time)
-        except KeyboardInterrupt:
-            ui.cleanup()
+        # Refresh screen if awake
+        if not sleeping:
+            ui.update()
+        await asyncio.sleep_ms(display_update_time)
 
 # Button setup
 PINS = [12, 13, 14, 15]
@@ -134,4 +131,9 @@ for pin in PINS:
     buttons.append(btn)
 
 # Start main loop
-asyncio.run(main())
+try:
+    asyncio.run(main())
+except KeyboardInterrupt:
+    print("Goodbye!")
+    ui.cleanup()
+    sys.exit()

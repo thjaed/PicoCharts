@@ -12,13 +12,15 @@ class ClassCharts:
         self.client = StudentClient(code=secrets.CC_CODE, dob=secrets.CC_DOB)
 
     def save_data(self):
+        print("saving all data from classcharts")
         self.login()
         self.save_timetable(login=False)
         self.save_behaviour(login=False)
+        print("saved all data from classcharts")
+
         
-    
-    def save_timetable(self, date_str=clock.get_date_cc_api(), login=True):
-        print("Saving timetable to file...")
+    def save_timetable(self, date_str=clock.today(), login=True):
+        print(f"Saving timetable to file for {clock.today()}...")
         if login: self.login()
         # Query API
         if v: print("Getting Timetable")
@@ -64,7 +66,7 @@ class ClassCharts:
                 f.write("\n")
         print("Done saving timetable to file")
         
-    def save_behaviour(self, from_date="2025-08-01", to_date=clock.get_date_cc_api("YYYY-MM-DD"), login=True):
+    def save_behaviour(self, from_date=clock.august(), to_date=clock.today(), login=True):
         print("Saving behaviour to file...")
         if login: self.login()
         # Query API

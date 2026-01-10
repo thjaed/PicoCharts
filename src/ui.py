@@ -166,6 +166,7 @@ class Timetable:
         bar.draw() # Draw menu bar on top
     
     def scroll(self, direction):
+        # VIBECODED FUNCTION #
         visible_height = 225
         scroll_offset = -self.scroll_distance # Scroll distance
         curr_height = 0

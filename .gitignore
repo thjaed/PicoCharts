@@ -198,3 +198,6 @@ src/.micropico
 src/secrets.py
 test_data.json
 .DS_Store
+todo.txt
+date-testing.py
+src/api-testing.py
