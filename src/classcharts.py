@@ -4,15 +4,20 @@ from uclasscharts_api import StudentClient
 from config import VERBOSE_OUTPUT as v
 import clock
 import secrets
+from bootscreen import BootScreen
+
+bs = BootScreen()
 
 class ClassCharts:
     def login(self):
         # Authenticate with ClassCharts API
         if v: print("Authenticating with ClassCharts")
+        bs.print("Authenticating with CC")
         self.client = StudentClient(code=secrets.CC_CODE, dob=secrets.CC_DOB)
 
     def save_data(self):
         print("saving all data from classcharts")
+        bs.print("Getting CC data")
         self.login()
         self.save_timetable(login=False)
         self.save_behaviour(login=False)
@@ -20,6 +25,7 @@ class ClassCharts:
 
         
     def save_timetable(self, date_str=clock.today(), login=True):
+        bs.print("Getting Timetable")
         print(f"Saving timetable to file for {clock.today()}...")
         if login: self.login()
         # Query API
@@ -68,6 +74,7 @@ class ClassCharts:
         
     def save_behaviour(self, from_date=clock.august(), to_date=clock.today(), login=True):
         print("Saving behaviour to file...")
+        bs.print("Getting Behaviour")
         if login: self.login()
         # Query API
         if v: print("Getting behaviour")

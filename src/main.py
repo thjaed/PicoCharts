@@ -10,12 +10,14 @@ import clock
 import wifi
 import config
 from config import VERBOSE_OUTPUT as v
+from bootscreen import BootScreen
 
 menu = Menu()
 bar = MenuBar()
 timetable = Timetable()
 behaviour = Behaviour()
 classcharts = ClassCharts()
+bs = BootScreen()
 
 cal_generated_today = False
 sleeping = False
@@ -91,13 +93,14 @@ async def sleep_handler():
     global last_interaction_time, sleeping
     while True:
         time = utime.time()
-        if time - config.SLEEP_TIME_SEC > last_interaction_time:
+        if time - config.SLEEP_TIME_SEC > last_interaction_time and sleeping == False:
             device_to_sleep()
         await asyncio.sleep_ms(display_update_time)
     
 def init():
     # Startup sequence
     print("Starting...")
+    bs.draw()
     wifi.wifi_connect()
     clock.set_time_ntp()
     classcharts.save_data()

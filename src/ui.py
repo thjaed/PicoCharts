@@ -49,6 +49,7 @@ def screen_on():
 
 def cleanup():
     display.clear()
+    display.set_backlight(0)
     led.set_rgb(0, 0, 0)
 
 
