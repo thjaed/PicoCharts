@@ -21,7 +21,6 @@ bs = BootScreen()
 
 cal_generated_today = False
 sleeping = False
-last_interaction_time = utime.time()
 wifi_connected = False
 fps = 30
 display_update_time = int((1/fps) * 1000) # Calculates time to sleep in ms
@@ -98,25 +97,29 @@ async def sleep_handler():
         await asyncio.sleep_ms(display_update_time)
     
 def init():
+    global last_interaction_time
     # Startup sequence
     print("Starting...")
     bs.draw()
     wifi.wifi_connect()
     clock.set_time_ntp()
     classcharts.save_data()
-
-async def main():
-    init()
     
     # Starts functions that need to be run asyncrously
     asyncio.create_task(update_menu_bar())
     asyncio.create_task(monitor_buttons())
-    asyncio.create_task(sleep_handler())
     
     # Draw UI
     timetable.go()
+
+    # Start monitoring time to sleep
+    last_interaction_time = utime.time()
+    asyncio.create_task(sleep_handler())
+
     print("Finished startup")
-    
+
+async def main():
+    init()
     while True:
         # Refresh screen if awake
         if not sleeping:
