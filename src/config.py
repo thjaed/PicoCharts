@@ -11,5 +11,5 @@ SLEEP_TIME_SEC = 20
 BRIGHTNESS = 0.8
 # NTP server used for setting time
 NTP_HOST = "pool.ntp.org"
-# Enable more output from console
-VERBOSE_OUTPUT = True
+# Seconds until wifi connection script gives up
+WIFI_TIMEOUT = 20

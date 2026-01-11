@@ -1,35 +1,29 @@
 import ujson # type: ignore
 
 from uclasscharts_api import StudentClient
-from config import VERBOSE_OUTPUT as v
 import clock
 import secrets
-from bootscreen import BootScreen
-
-bs = BootScreen()
 
 class ClassCharts:
     def login(self):
         # Authenticate with ClassCharts API
-        if v: print("Authenticating with ClassCharts")
-        bs.print("Authenticating with CC")
         self.client = StudentClient(code=secrets.CC_CODE, dob=secrets.CC_DOB)
 
+        return "Authenticated with CC"
+
     def save_data(self):
-        print("saving all data from classcharts")
-        bs.print("Getting CC data")
-        self.login()
-        self.save_timetable(login=False)
-        self.save_behaviour(login=False)
-        print("saved all data from classcharts")
+        yield self.login()
+        yield "Getting Timetable"
+        yield self.save_timetable(login=False)
+        yield "Getting Behaviour"
+        yield self.save_behaviour(login=False)
+
+        return "All data saved"
 
         
     def save_timetable(self, date_str=clock.today(), login=True):
-        bs.print("Getting Timetable")
-        print(f"Saving timetable to file for {clock.today()}...")
         if login: self.login()
         # Query API
-        if v: print("Getting Timetable")
         response = self.client.get_lessons(date=date_str)
         lessons = response["data"]
         meta = response["meta"]
@@ -61,23 +55,18 @@ class ClassCharts:
                 "end_time": end_time,
             }
             timetable.append(event)
-            
-            if v: print(f"{start_time}: {subject} with {teacher} in {room}")
         
         # Write data to file
-        if v: print("Writing timetable to timetable.jsonl")
         with open("timetable.jsonl", "w") as f:
             for event in timetable:
                 ujson.dump(event, f)
                 f.write("\n")
-        print("Done saving timetable to file")
+        
+        return "Saved Timetable"
         
     def save_behaviour(self, from_date=clock.august(), to_date=clock.today(), login=True):
-        print("Saving behaviour to file...")
-        bs.print("Getting Behaviour")
         if login: self.login()
         # Query API
-        if v: print("Getting behaviour")
 
         behaviour = []
         times = ["august", "this_week", "last_week"]
@@ -110,12 +99,10 @@ class ClassCharts:
                 "negative": total_negative
             })
 
-            print(f"{time}: Positives: {total_positive} Negatives: {total_negative}")
-
-        if v: print("Writing behaviour to behaviour.jsonl")
         # Save data to file
         with open("behaviour.jsonl", "w") as f:
             for line in behaviour:
                 ujson.dump(line, f)
                 f.write("\n")
-        print("Done saving behaviour to file")
+        
+        return "Saved Behaviour"

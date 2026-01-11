@@ -7,7 +7,6 @@ BLACK = display.create_pen(0, 0, 0)
 
 class BootScreen:
     def draw(self):
-        print("Drawing Bootscreen")
         display.set_pen(BLACK)
         display.clear()
 
@@ -21,6 +20,7 @@ class BootScreen:
         display.update()
     
     def print(self, text):
+        print(f"Displaying message: {text}")
         # Clear text area
         display.set_pen(BLACK)
         display.rectangle(0, 190, 320, 50)

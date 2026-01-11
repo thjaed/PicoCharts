@@ -4,9 +4,6 @@ import usocket # type: ignore
 import ustruct # type: ignore
 
 import config
-from bootscreen import BootScreen
-
-boot = BootScreen()
 
 cal_generated_today = False
 # Months and days as strings for displaying date
@@ -40,8 +37,7 @@ def clock_str_to_secs(clock_str):
     return (hrs * 60) + mins
     
 def set_time_ntp():
-    print("Setting time via NTP")
-    boot.print(f"Setting time via NTP")
+    yield "Setting time"
     global rtc
     rtc = machine.RTC()
     NTP_DELTA = 2208988800
@@ -58,6 +54,7 @@ def set_time_ntp():
     ntp_time = ustruct.unpack("!I", msg[40:44])[0]
     t = utime.gmtime(ntp_time - NTP_DELTA + config.TZ_OFFSET_SEC)
     rtc.datetime((t[0], t[1], t[2], t[6] + 1, t[3], t[4], t[5], 0))
+    return "Time set"
 
 def today():
     # Returns date as a string in DD-MM-YYYY as needed by the classchars API

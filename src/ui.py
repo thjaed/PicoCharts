@@ -6,9 +6,9 @@ import os
 
 #import battery
 import config
-from config import VERBOSE_OUTPUT as v
 import clock
 from classcharts import ClassCharts
+import wifi
 
 display = PicoGraphics(display=DISPLAY_PICO_DISPLAY_2, pen_type=PEN_P4)
 led = RGBLED(6, 7, 8)
@@ -93,7 +93,6 @@ class Timetable:
         self.content_height = 0
         
     def go(self):
-        if v: print("Going to timetable page")
         global page
         page = "timetable"
         self.scroll_distance = 0
@@ -207,7 +206,6 @@ class Behaviour:
         self.time_range = 0
 
     def go(self):
-        if v: print("Going to behaviour page")
         global page
         page = "behaviour"
         self.draw()
@@ -233,7 +231,6 @@ class Behaviour:
                     positives = str(l.get("positive"))
                     negatives = f"-{str(l.get("negative"))}" if l.get("negative") > 0 else str(l.get("negative")) # add - sign in front of negative points
         
-        print(f"Positives: {positives} Negatives: {negatives}")
         
         display.set_pen(GREEN)
         display.rectangle(0, 0, 160, 240)
@@ -271,7 +268,7 @@ class Behaviour:
     
 class Menu:
     def __init__(self):
-        self.entries = ["Timetable", "Behaviour", "Refresh Data"]
+        self.entries = ["Timetable", "Behaviour", "Refresh Data", "Refresh Connection and Get Data"]
         self.selected = 0
         
     def go(self):
@@ -320,8 +317,24 @@ class Menu:
             
         elif name == "Refresh Data":
             message.show("Getting data from ClassCharts")
-            classcharts.save_data()
+            for text in classcharts.save_data():
+                message.show(text)
             timetable.go()
+        
+        elif name == "Refresh Connection and Get Data":
+            offline = False
+            for text in wifi.wifi_connect():
+                if text == False:
+                    offline = True
+                else:
+                    message.show(text)
+    
+            if not offline:
+                for text in clock.set_time_ntp():
+                    message.show(text)
+                for text in classcharts.save_data():
+                    message.show(text)
+                timetable.go()
 
 class Message:
     def __init__(self):
@@ -337,7 +350,7 @@ class Message:
         # Measure width in order to put text in centre of screen
         text_width = display.measure_text(text, scale=2)
         
-        if v: print(f"Displaying message: {text}")
+        print(f"Displaying message: {text}")
         display.set_font("bitmap6")
         display.set_pen(WHITE)
         display.text(text, int((320 / 2) - (text_width / 2)), 108, scale=2)

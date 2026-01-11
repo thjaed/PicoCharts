@@ -9,7 +9,6 @@ from classcharts import ClassCharts
 import clock
 import wifi
 import config
-from config import VERBOSE_OUTPUT as v
 from bootscreen import BootScreen
 
 menu = Menu()
@@ -34,7 +33,6 @@ def press_handler(btn, pattern):
     else:
         if pattern == Button.SINGLE_PRESS:
             if btn.get_id() == BUTTON_A:
-                if v: print("Button A")
                 if ui.page == "menu":
                     menu.exec() # Run the code associated with the button
                 elif ui.page == "behaviour":
@@ -42,21 +40,18 @@ def press_handler(btn, pattern):
                     behaviour.draw()
 
             if btn.get_id() == BUTTON_B:
-                if v: print("Button B")
                 if ui.page != "menu": # Go to menu page
                     menu.go()
                 elif ui.page == "menu": # Go to timetable page
                     timetable.go()
 
             if btn.get_id() == BUTTON_X:
-                if v: print("Button X")
                 if ui.page == "timetable": # Scroll events page up
                     timetable.scroll(direction="up")
                 elif ui.page == "menu": # Highlight the button above
                     menu.scroll(direction="up")
 
             elif btn.get_id() == BUTTON_Y:
-                if v: print("Button Y")
                 if ui.page == "timetable":  # Scroll events page down
                     timetable.scroll(direction="down")
                 elif ui.page == "menu": # Highlight the button below
@@ -101,9 +96,21 @@ def init():
     # Startup sequence
     print("Starting...")
     bs.draw()
-    wifi.wifi_connect()
-    clock.set_time_ntp()
-    classcharts.save_data()
+    bs.print("Starting")
+    offline = False
+    for text in wifi.wifi_connect():
+        if text == False:
+            offline = True
+        elif text == True:
+            offline = False
+        else:
+            bs.print(text)
+    
+    if not offline:
+        for text in clock.set_time_ntp():
+            bs.print(text)
+        for text in classcharts.save_data():
+            bs.print(text)
     
     # Starts functions that need to be run asyncrously
     asyncio.create_task(update_menu_bar())
