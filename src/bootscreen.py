@@ -20,7 +20,7 @@ class BootScreen:
         display.update()
     
     def print(self, text):
-        print(f"Displaying message: {text}")
+        print(text)
         # Clear text area
         display.set_pen(BLACK)
         display.rectangle(0, 190, 320, 50)

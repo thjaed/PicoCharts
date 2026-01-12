@@ -9,6 +9,7 @@ import config
 import clock
 from classcharts import ClassCharts
 import wifi
+import state
 
 display = PicoGraphics(display=DISPLAY_PICO_DISPLAY_2, pen_type=PEN_P4)
 led = RGBLED(6, 7, 8)
@@ -55,26 +56,32 @@ def cleanup():
 
 class MenuBar:
     def draw(self):
-        time_secs = utime.time()
-
-        time = clock.get_clock(time_secs)
-        date = clock.get_date(time_secs)
-        #battery_level = battery.percentage()
-
-        clock_width = display.measure_text(time, scale=2)
-        date_width = display.measure_text(date, scale=2)
-
+        display.set_font("bitmap6")
         display.set_pen(GREY)
         display.rectangle(0, 0, 320, 15) # Top bar
         display.set_pen(WHITE)
         display.line(0, 14, 320, 14) # Line
 
-        display.set_pen(WHITE)
-        display.set_font("bitmap6")
-        display.text(time, 0, 0, scale=2) # Clock
-        display.text(date, int((clock_width + (290 - clock_width) / 2) - (date_width / 2)), 0, scale=2) # Date
+        if not state.WiFi.connected:
+            # Draw offline indicator instead of date and time
+            display.set_pen(RED)
+            text_width = display.measure_text("OFFLINE: DATA OUT OF DATE", scale=2)
+            display.text("OFFLINE: DATA OUT OF DATE", 160 - text_width // 2, 0, scale=2)
+        else:
+            time_secs = utime.time()
+
+            time = clock.get_clock(time_secs)
+            date = clock.get_date(time_secs)
+
+            clock_width = display.measure_text(time, scale=2)
+            date_width = display.measure_text(date, scale=2)
+
+            display.set_pen(WHITE)
+            display.text(time, 0, 0, scale=2) # Clock
+            display.text(date, int((clock_width + (290 - clock_width) / 2) - (date_width / 2)), 0, scale=2) # Date
 
         # Battery Icon
+        #battery_level = battery.percentage()
         #display.set_pen(WHITE)
         #display.rectangle(290, 2, 25, 10) # White border
         #display.rectangle(315, 4, 2, 6) # Notch
@@ -103,9 +110,12 @@ class Timetable:
         display.set_pen(GREY)
         display.clear()
         
-        if "timetable.jsonl" not in os.listdir():
+        if "timetable.jsonl" not in os.listdir() and state.WiFi.connected:
             message.show("No timetable file, generating one", change_page=False)
             classcharts.save_timetable()
+        elif "timetable.jsonl" not in os.listdir() and not state.WiFi.connected:
+            message.show("Offline: No Timetable")
+            return False
         
         with open("timetable.jsonl", "r") as f:
             self.content_height = 0
@@ -115,8 +125,14 @@ class Timetable:
             
             for l in f:
                 l = ujson.loads(l) # load into json format
-                
-                if clock.clock_str_to_secs(l.get("end_time")) > clock.clock_str_to_secs(clock.get_clock(utime.time())):
+
+                if state.WiFi.connected:
+                    lesson_in_future = clock.clock_str_to_secs(l.get("end_time")) > clock.clock_str_to_secs()
+                else:
+                    # Load all lessons if not connected to wifi (can't tell time)
+                    lesson_in_future = True
+
+                if lesson_in_future:
                     lessons_to_display = True
                     
                     subject = l.get("subject")
@@ -220,9 +236,12 @@ class Behaviour:
         display.set_pen(GREY)
         display.clear()
 
-        if "behaviour.jsonl" not in os.listdir():
+        if "behaviour.jsonl" not in os.listdir() and state.WiFi.connected:
             message.show("No behaviour file, generating one", change_page=False)
             classcharts.save_behaviour()
+        elif "behaviour.jsonl" not in os.listdir() and not state.WiFi.connected:
+            message.show("Offline: No Behaviour")
+            return False
         
         with open("behaviour.jsonl", "r") as f:
             for l in f:
@@ -268,7 +287,7 @@ class Behaviour:
     
 class Menu:
     def __init__(self):
-        self.entries = ["Timetable", "Behaviour", "Refresh Data", "Refresh Connection and Get Data"]
+        self.entries = ["Timetable", "Behaviour", "Refresh Data", "Connect to WiFi and Get Data"]
         self.selected = 0
         
     def go(self):
@@ -309,32 +328,37 @@ class Menu:
         # Executes code for selected entry
         name = self.entries[self.selected]
 
-        if name == "Timetable":
+        if name == self.entries[0]:
             timetable.go()
         
-        elif name == "Behaviour":
+        elif name == self.entries[1]:
             behaviour.go()
             
-        elif name == "Refresh Data":
-            message.show("Getting data from ClassCharts")
-            for text in classcharts.save_data():
-                message.show(text)
+        elif name == self.entries[2]:
+            if state.WiFi.connected:
+                message.show("Getting data from ClassCharts")
+                for text in classcharts.save_data():
+                    message.show(text)
+            else:
+                message.show("OFFLINE")
+                utime.sleep_ms(3000)
+
             timetable.go()
         
-        elif name == "Refresh Connection and Get Data":
-            offline = False
+        elif name == self.entries[3]:
             for text in wifi.wifi_connect():
-                if text == False:
-                    offline = True
-                else:
-                    message.show(text)
+                message.show(text)
     
-            if not offline:
+            if state.WiFi.connected:
                 for text in clock.set_time_ntp():
                     message.show(text)
                 for text in classcharts.save_data():
                     message.show(text)
-                timetable.go()
+            else:
+                message.show("OFFLINE")
+                utime.sleep_ms(3000)
+
+            timetable.go()
 
 class Message:
     def __init__(self):
@@ -350,7 +374,7 @@ class Message:
         # Measure width in order to put text in centre of screen
         text_width = display.measure_text(text, scale=2)
         
-        print(f"Displaying message: {text}")
+        print(text)
         display.set_font("bitmap6")
         display.set_pen(WHITE)
         display.text(text, int((320 / 2) - (text_width / 2)), 108, scale=2)

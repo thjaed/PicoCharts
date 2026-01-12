@@ -1,12 +1,11 @@
+from time import sleep
 import network # type: ignore
 import usocket # type: ignore
 
-from time import sleep
-
 import secrets
+import state
 
 WIFI_TIMEOUT = 10
-wifi_connected = None
 
 def test_connection(type):
     try:
@@ -27,7 +26,7 @@ def test_connection(type):
     
 def wifi_connect():
     yield "Finding WiFi Networks"
-    global wifi_connected, WIFI_TIMEOUT
+    global WIFI_TIMEOUT
 
     # Init Wi-Fi Interface
     wlan = network.WLAN(network.STA_IF)
@@ -49,9 +48,8 @@ def wifi_connect():
     found_nets = no_dups
 
     if len(found_nets) == 0: # If no networks found
-        wifi_connected = False
+        state.WiFi.connected = False
         yield "No networks found"
-        yield False
     
     else: # If a known net was found
         tries = 0
@@ -71,14 +69,12 @@ def wifi_connect():
             basic_test = test_connection(type="BASIC")
 
             if wlan.status() != 3 or basic_test == False: # if not connected
-                wifi_connected = False
                 yield "Failed to connect"
                 if tries == len(found_nets):
-                    yield False
+                    state.WiFi.connected = False
                     break
 
             elif basic_test and test_connection(type="WEB"): # if connected
-                wifi_connected = True
+                state.WiFi.connected = True
                 yield "Connection Succesful"
-                yield True
                 break

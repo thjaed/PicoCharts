@@ -30,7 +30,7 @@ def get_date(secs=utime.time()): # Returns a date string from timestamp
 
     return f"{day} {time[2]} {month}"
     
-def clock_str_to_secs(clock_str):
+def clock_str_to_secs(clock_str=get_clock()):
     # Returns mins passed in a day from a time in HH:MM form
     hrs = int(clock_str[0:2])
     mins = int(clock_str[3:5])

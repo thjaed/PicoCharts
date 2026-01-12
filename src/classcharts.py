@@ -20,7 +20,6 @@ class ClassCharts:
 
         yield "All data saved"
 
-        
     def save_timetable(self, date_str=clock.today(), login=True):
         if login: self.login()
         # Query API
