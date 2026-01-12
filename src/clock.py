@@ -54,7 +54,7 @@ def set_time_ntp():
     ntp_time = ustruct.unpack("!I", msg[40:44])[0]
     t = utime.gmtime(ntp_time - NTP_DELTA + config.TZ_OFFSET_SEC)
     rtc.datetime((t[0], t[1], t[2], t[6] + 1, t[3], t[4], t[5], 0))
-    return "Time set"
+    yield "Time set"
 
 def today():
     # Returns date as a string in DD-MM-YYYY as needed by the classchars API

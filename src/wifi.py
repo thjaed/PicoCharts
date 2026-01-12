@@ -5,7 +5,7 @@ from time import sleep
 
 import secrets
 
-WIFI_TIMEOUT = 20
+WIFI_TIMEOUT = 10
 wifi_connected = None
 
 def test_connection(type):
@@ -37,42 +37,48 @@ def wifi_connect():
     networks = wlan.scan()
 
     # Look for known networks
-    found_net = False
-    net_connect = None
+    found_nets = []
     for k in secrets.WIFI_NETWORKS:
         for net_info in networks:
             if k == net_info[0].decode('UTF-8'): # Decode network name
-                found_net = True
-                net_connect = k
-                break
-        if found_net:
-            break
+                found_nets.append(k)
     
-    if not found_net: # If no networks found
+    # Remove duplicate entries
+    no_dups = []
+    [no_dups.append(i) for i in found_nets if i not in no_dups]
+    found_nets = no_dups
+
+    if len(found_nets) == 0: # If no networks found
         wifi_connected = False
         yield "No networks found"
         yield False
     
     else: # If a known net was found
-        yield f"Connecting to {net_connect}"
-        wlan.connect(net_connect, secrets.WIFI_NETWORKS[net_connect])
+        tries = 0
+        for net in found_nets:
+            tries += 1
+            yield f"Connecting to {net}"
+            wlan.connect(net, secrets.WIFI_NETWORKS[net])
 
-        # Wait for Wi-Fi connection
-        while WIFI_TIMEOUT > 0:
-            if wlan.status() >= 3: # if connected stop waiting
-                break
-            WIFI_TIMEOUT -= 1
-            sleep(1)
+            # Wait for Wi-Fi connection
+            while WIFI_TIMEOUT > 0:
+                if wlan.status() >= 3: # if connected stop waiting
+                    break
+                WIFI_TIMEOUT -= 1
+                sleep(1)
         
-        # connection test
-        basic_test = test_connection(type="BASIC")
+            # connection test
+            basic_test = test_connection(type="BASIC")
 
-        if wlan.status() != 3 or basic_test == False: # if not connected
-            wifi_connected = False
-            yield "Failed to connect"
-            return False
-                
-        elif basic_test and test_connection(type="WEB"): # if connected
-            wifi_connected = True
-            yield "Connection Succesful"
-            return True
+            if wlan.status() != 3 or basic_test == False: # if not connected
+                wifi_connected = False
+                yield "Failed to connect"
+                if tries == len(found_nets):
+                    yield False
+                    break
+
+            elif basic_test and test_connection(type="WEB"): # if connected
+                wifi_connected = True
+                yield "Connection Succesful"
+                yield True
+                break

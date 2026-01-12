@@ -18,7 +18,7 @@ class ClassCharts:
         yield "Getting Behaviour"
         yield self.save_behaviour(login=False)
 
-        return "All data saved"
+        yield "All data saved"
 
         
     def save_timetable(self, date_str=clock.today(), login=True):
