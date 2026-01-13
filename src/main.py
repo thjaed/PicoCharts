@@ -3,13 +3,12 @@ import utime # type: ignore
 import sys
 
 from pybuttons import Button
-from ui import Menu, MenuBar, Timetable, Behaviour
+from ui import BootScreen, Menu, MenuBar, Timetable, Behaviour
 import ui
 from classcharts import ClassCharts
 import clock
 import wifi
 import config
-from bootscreen import BootScreen
 import state
 
 menu = Menu()
@@ -17,7 +16,7 @@ bar = MenuBar()
 timetable = Timetable()
 behaviour = Behaviour()
 classcharts = ClassCharts()
-bs = BootScreen()
+bootscreen = BootScreen()
 
 fps = 30
 display_update_time = int((1/fps) * 1000) # Calculates time to sleep in ms
@@ -88,17 +87,17 @@ async def sleep_handler():
 def init():
     # Startup sequence
     print("Starting...")
-    bs.draw()
-    bs.print("Starting")
+    bootscreen.draw()
+    bootscreen.print("Starting")
     offline = False
     for text in wifi.wifi_connect():
-        bs.print(text)
+        bootscreen.print(text)
     
     if state.WiFi.connected:
         for text in clock.set_time_ntp():
-            bs.print(text)
+            bootscreen.print(text)
         for text in classcharts.save_data():
-            bs.print(text)
+            bootscreen.print(text)
     
     # Starts functions that need to be run asyncrously
     asyncio.create_task(update_menu_bar())
