@@ -24,6 +24,7 @@ DARK_GREY = display.create_pen(60, 60, 60)
 BLACK = display.create_pen(0, 0, 0)
 GREEN = display.create_pen(0, 255, 0)
 RED = display.create_pen(255, 0, 0)
+YELLOW = display.create_pen(255, 255, 0)
 
 def setup():
     global page, display
@@ -94,10 +95,8 @@ class MenuBar:
             text_width = display.measure_text("OFFLINE: DATA OUT OF DATE", scale=2)
             display.text("OFFLINE: DATA OUT OF DATE", 160 - text_width // 2, 0, scale=2)
         else:
-            time_secs = utime.time()
-
-            time = clock.get_clock(time_secs)
-            date = clock.get_date(time_secs)
+            time = clock.get_clock()
+            date = clock.get_date()
 
             clock_width = display.measure_text(time, scale=2)
             date_width = display.measure_text(date, scale=2)
@@ -310,10 +309,75 @@ class Behaviour:
         display.text(text, (160 - (text_width // 2)), 200 - 2, scale=2)
 
         bar.draw()
+
+class Attendence:
+    def __init__(self):
+        self.time_ranges = ["august", "this_week", "last_week"]
+        self.time_range = 0
+
+    def go(self):
+        global page
+        page = "attendance"
+        self.draw()
+    
+    def toggle_time_range(self):
+        if self.time_range < len(self.time_ranges) - 1:
+            self.time_range += 1
+        else:
+            self.time_range = 0
+    
+    def draw(self):
+        display.set_pen(GREY)
+        display.clear()
+
+        if "attendance.jsonl" not in os.listdir() and state.WiFi.connected:
+            message.show("No attendance file, generating one", change_page=False)
+            classcharts.save_attendance()
+        elif "attendance.jsonl" not in os.listdir() and not state.WiFi.connected:
+            message.show("Offline: No Attendance")
+            return False
+        
+        with open("attendance.jsonl", "r") as f:
+            for l in f:
+                l = ujson.loads(l)
+                if l.get("time") == self.time_ranges[self.time_range]:
+                    percentage = int(l.get("percentage"))
+        
+        if percentage > 95:
+            display.set_pen(GREEN)
+        elif percentage > 85:
+            display.set_pen(YELLOW)
+        else:
+            display.set_pen(RED)
+        
+        percentage = f"{percentage}%"
+
+        display.rectangle(0, 0, 320, 240)
+    
+        display.set_pen(WHITE)
+
+        text_width = display.measure_text(percentage, scale=5)
+        display.text(percentage, 160 - text_width // 2, 100, scale=5)
+
+        if self.time_ranges[self.time_range] == "august":
+            text = "Since August"
+        elif self.time_ranges[self.time_range] == "this_week":
+                text = "This Week"
+        elif self.time_ranges[self.time_range] == "last_week":
+                text = "Last Week"
+        
+        text_width = display.measure_text(text, scale=2)
+        display.set_pen(WHITE)
+        display.rectangle((160 - (text_width // 2)) - 5, 200 - 5, text_width + 10, 20)
+
+        display.set_pen(BLACK)
+        display.text(text, (160 - (text_width // 2)), 200 - 2, scale=2)
+
+        bar.draw()
     
 class Menu:
     def __init__(self):
-        self.entries = ["Timetable", "Behaviour", "Refresh Data", "Connect to WiFi and Get Data"]
+        self.entries = ["Timetable", "Behaviour", "Attendance", "Refresh Data", "Connect to WiFi and Get Data"]
         self.selected = 0
         
     def go(self):
@@ -354,13 +418,16 @@ class Menu:
         # Executes code for selected entry
         name = self.entries[self.selected]
 
-        if name == self.entries[0]:
+        if name == "Timetable":
             timetable.go()
         
-        elif name == self.entries[1]:
+        elif name == "Behaviour":
             behaviour.go()
+        
+        elif name == "Attendance":
+            attendance.go()
             
-        elif name == self.entries[2]:
+        elif name == "Refresh Data":
             if state.WiFi.connected:
                 message.show("Getting data from ClassCharts")
                 for text in classcharts.save_data():
@@ -371,7 +438,7 @@ class Menu:
 
             timetable.go()
         
-        elif name == self.entries[3]:
+        elif name == "Connect to WiFi and Get Data":
             for text in wifi.wifi_connect():
                 message.show(text)
     
@@ -410,5 +477,6 @@ class Message:
 message = Message()
 timetable = Timetable()
 behaviour = Behaviour()
+attendance = Attendence()
 bar = MenuBar()
 menu = Menu()

@@ -12,7 +12,10 @@ days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sun
 # Days in each month (non-leap year)
 DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-def get_clock(secs=utime.time()): # Returns a clock string from timestamp
+def get_clock(secs=None): # Returns a clock string from timestamp
+    if secs is None:
+        secs = utime.time()
+
     time = utime.localtime(secs)
 
     # gets hour and minuite from time
@@ -22,7 +25,10 @@ def get_clock(secs=utime.time()): # Returns a clock string from timestamp
 
     return f"{hour}:{minute}"
 
-def get_date(secs=utime.time()): # Returns a date string from timestamp
+def get_date(secs=None): # Returns a date string from timestamp
+    if secs is None:
+        secs = utime.time()
+
     time = utime.localtime(secs)
 
     day = days[time[6]]

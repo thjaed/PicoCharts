@@ -17,13 +17,15 @@ class ClassCharts:
         yield self.save_timetable(login=False)
         yield "Getting Behaviour"
         yield self.save_behaviour(login=False)
+        yield "Getting Attendance"
+        yield self.save_attendance(login=False)
 
         yield "All data saved"
 
-    def save_timetable(self, date_str=clock.today(), login=True):
+    def save_timetable(self, login=True):
         if login: self.login()
         # Query API
-        response = self.client.get_lessons(date=date_str)
+        response = self.client.get_lessons(date=clock.today())
         lessons = response["data"]
         meta = response["meta"]
         
@@ -63,13 +65,13 @@ class ClassCharts:
         
         return "Saved Timetable"
         
-    def save_behaviour(self, from_date=clock.august(), to_date=clock.today(), login=True):
+    def save_behaviour(self, login=True):
         if login: self.login()
-        # Query API
 
         behaviour = []
         times = ["august", "this_week", "last_week"]
 
+        # Query API
         for time in times:
             if time == "august":
                 response = self.client.get_behaviour(from_date=clock.august(), to_date=clock.today())
@@ -105,3 +107,39 @@ class ClassCharts:
                 f.write("\n")
         
         return "Saved Behaviour"
+
+    def save_attendance(self, login=True):
+        if login: self.login()
+
+        attendance = []
+        times = ["this_week", "last_week"]
+
+        # Query API
+        for time in times:
+            if time == "this_week":
+                response = self.client.get_attendance(from_date=clock.this_monday(), to_date=clock.today())
+                since_august = response["meta"]["percentage_singe_august"]
+            elif time == "last_week":
+                last_week = clock.last_week()
+                response = self.client.get_attendance(from_date=last_week[0], to_date=last_week[1])
+
+            meta = response["meta"]
+
+            # Store in json format
+            attendance.append({
+                "time": time,
+                "percentage": meta["percentage"]
+            })
+        
+        attendance.append({
+            "time": "august",
+            "percentage": since_august
+        })
+
+        # Save data to file
+        with open("attendance.jsonl", "w") as f:
+            for line in attendance:
+                ujson.dump(line, f)
+                f.write("\n")
+        
+        return "Saved Attendance"

@@ -3,20 +3,19 @@ import utime # type: ignore
 import sys
 
 from pybuttons import Button
-from ui import BootScreen, Menu, MenuBar, Timetable, Behaviour
 import ui
-from classcharts import ClassCharts
 import clock
 import wifi
 import config
 import state
 
-menu = Menu()
-bar = MenuBar()
-timetable = Timetable()
-behaviour = Behaviour()
-classcharts = ClassCharts()
-bootscreen = BootScreen()
+menu = ui.Menu()
+bar = ui.MenuBar()
+timetable = ui.Timetable()
+behaviour = ui.Behaviour()
+attendance = ui.Attendence()
+classcharts = ui.ClassCharts()
+bootscreen = ui.BootScreen()
 
 fps = 30
 display_update_time = int((1/fps) * 1000) # Calculates time to sleep in ms
@@ -34,6 +33,9 @@ def press_handler(btn, pattern):
                 elif ui.page == "behaviour":
                     behaviour.toggle_time_range()
                     behaviour.draw()
+                elif ui.page == "attendance":
+                    attendance.toggle_time_range()
+                    attendance.draw()
 
             if btn.get_id() == BUTTON_B:
                 if ui.page != "menu": # Go to menu page
@@ -86,10 +88,8 @@ async def sleep_handler():
     
 def init():
     # Startup sequence
-    print("Starting...")
     bootscreen.draw()
     bootscreen.print("Starting")
-    offline = False
     for text in wifi.wifi_connect():
         bootscreen.print(text)
     
