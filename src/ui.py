@@ -7,9 +7,8 @@ import os
 #import battery
 import config
 import clock
-from classcharts import ClassCharts
-import wifi
 import state
+from classcharts import ClassCharts
 
 display = PicoGraphics(display=DISPLAY_PICO_DISPLAY_2, pen_type=PEN_P4)
 led = RGBLED(6, 7, 8)
@@ -413,45 +412,6 @@ class Menu:
             if self.selected < len(self.entries) - 1:
                 self.selected += 1
                 self.draw()
-    
-    def exec(self):
-        # Executes code for selected entry
-        name = self.entries[self.selected]
-
-        if name == "Timetable":
-            timetable.go()
-        
-        elif name == "Behaviour":
-            behaviour.go()
-        
-        elif name == "Attendance":
-            attendance.go()
-            
-        elif name == "Refresh Data":
-            if state.WiFi.connected:
-                message.show("Getting data from ClassCharts")
-                for text in classcharts.save_data():
-                    message.show(text)
-            else:
-                message.show("OFFLINE")
-                utime.sleep_ms(3000)
-
-            timetable.go()
-        
-        elif name == "Connect to WiFi and Get Data":
-            for text in wifi.wifi_connect():
-                message.show(text)
-    
-            if state.WiFi.connected:
-                for text in clock.set_time_ntp():
-                    message.show(text)
-                for text in classcharts.save_data():
-                    message.show(text)
-            else:
-                message.show("OFFLINE")
-                utime.sleep_ms(3000)
-
-            timetable.go()
 
 class Message:
     def __init__(self):
@@ -475,8 +435,4 @@ class Message:
         display.update()
 
 message = Message()
-timetable = Timetable()
-behaviour = Behaviour()
-attendance = Attendence()
 bar = MenuBar()
-menu = Menu()

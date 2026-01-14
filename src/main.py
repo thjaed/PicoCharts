@@ -9,6 +9,7 @@ import wifi
 import config
 import state
 
+message = ui.Message()
 menu = ui.Menu()
 bar = ui.MenuBar()
 timetable = ui.Timetable()
@@ -29,7 +30,7 @@ def press_handler(btn, pattern):
         if pattern == Button.SINGLE_PRESS:
             if btn.get_id() == BUTTON_A:
                 if ui.page == "menu":
-                    menu.exec() # Run the code associated with the button
+                    menu_exec() # Run the code associated with the button
                 elif ui.page == "behaviour":
                     behaviour.toggle_time_range()
                     behaviour.draw()
@@ -54,6 +55,45 @@ def press_handler(btn, pattern):
                     timetable.scroll(direction="down")
                 elif ui.page == "menu": # Highlight the button below
                     menu.scroll(direction="down")
+
+def menu_exec():
+        # Executes code for selected entry
+        name = menu.entries[menu.selected]
+
+        if name == "Timetable":
+            timetable.go()
+        
+        elif name == "Behaviour":
+            behaviour.go()
+        
+        elif name == "Attendance":
+            attendance.go()
+            
+        elif name == "Refresh Data":
+            if state.WiFi.connected:
+                message.show("Getting data from ClassCharts")
+                for text in classcharts.save_data():
+                    message.show(text)
+            else:
+                message.show("OFFLINE")
+                utime.sleep_ms(3000)
+
+            timetable.go()
+        
+        elif name == "Connect to WiFi and Get Data":
+            for text in wifi.wifi_connect():
+                message.show(text)
+    
+            if state.WiFi.connected:
+                for text in clock.set_time_ntp():
+                    message.show(text)
+                for text in classcharts.save_data():
+                    message.show(text)
+            else:
+                message.show("OFFLINE")
+                utime.sleep_ms(3000)
+
+            timetable.go()
 
 def device_to_sleep():
     # Turns off screen
