@@ -19,6 +19,8 @@ class ClassCharts:
         yield self.save_behaviour(login=False)
         yield "Getting Attendance"
         yield self.save_attendance(login=False)
+        yield "Getting Homework"
+        yield self.save_homework(login=False)
 
         yield "All data saved"
 
@@ -143,3 +145,46 @@ class ClassCharts:
                 f.write("\n")
         
         return "Saved Attendance"
+
+    def save_homework(self, login=True):
+        if login: self.login()
+
+        response = self.client.get_homework_tasks(from_date=clock.seven_days_ago(), to_date=clock.one_month_future(), display_date="due_date")
+        data = response["data"]
+
+        homeworks = []
+
+        for task in data:
+            title = task["title"]
+            teacher = task["teacher"]
+            subject = task["subject"]
+            due_date = task["due_date"]
+            issue_date = task["issue_date"]
+        
+            if task["status"]["first_seen_date"] != None:
+                seen = True
+            else:
+                seen = False
+
+            if task["status"]["ticked"] == "yes":
+                completed = True 
+            else:
+                completed = False
+            
+
+            homeworks.append({
+                "title": title,
+                "teacher": teacher,
+                "subject": subject,
+                "due_date": due_date,
+                "issue_date": issue_date,
+                "seen": seen,
+                "completed": completed
+            })
+
+        with open("homework.jsonl", "w") as f:
+            for line in homeworks:
+                ujson.dump(line, f)
+                f.write("\n")
+        
+        return "Saved Homework"
