@@ -1,4 +1,5 @@
 import ujson # type: ignore
+import utime # type: ignore
 
 from uclasscharts_api import StudentClient
 import clock
@@ -171,15 +172,26 @@ class ClassCharts:
             else:
                 completed = False
             
+            due_date_secs = clock.date_to_secs(due_date)
+
+            if due_date_secs < utime.time():
+                late = True
+            else:
+                late = False
+
+            due_date_str = clock.get_date(due_date_secs)
+            
 
             homeworks.append({
                 "title": title,
                 "teacher": teacher,
                 "subject": subject,
                 "due_date": due_date,
+                "due_date_str": due_date_str,
                 "issue_date": issue_date,
                 "seen": seen,
-                "completed": completed
+                "completed": completed,
+                "late": late
             })
 
         with open("homework.jsonl", "w") as f:

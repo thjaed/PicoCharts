@@ -53,6 +53,19 @@ def cleanup():
     display.set_backlight(0)
     led.set_rgb(0, 0, 0)
 
+def measure_wrapped_text(text, wrap_px, char_width, line_height):
+    # VIBECODED FUNCTION #
+    chars_per_line = wrap_px // char_width
+    lines = 0
+
+    for paragraph in text.split("\n"):
+        if not paragraph:
+            lines += 1
+            continue
+        lines += (len(paragraph) + chars_per_line - 1) // chars_per_line
+
+    return lines * line_height
+
 class BootScreen:
     def draw(self):
         display.set_pen(BLACK)
@@ -79,6 +92,7 @@ class BootScreen:
         display.text(text, 160 -  text_width // 2, 190, scale=2)
 
         display.update()
+
 
 class MenuBar:
     def draw(self):
@@ -373,10 +387,134 @@ class Attendence:
         display.text(text, (160 - (text_width // 2)), 200 - 2, scale=2)
 
         bar.draw()
+
+class Homework:
+    def __init__(self):
+        self.box_heights = []
+        self.scroll_distance = 0
+        self.content_height = 0
+        
+    def go(self):
+        global page
+        page = "homework"
+        self.scroll_distance = 0
+        self.draw()
+        bar.draw()
     
+    def draw(self):
+        display.set_pen(GREY)
+        display.clear()
+        
+        if "homework.jsonl" not in os.listdir() and state.WiFi.connected:
+            message.show("No homework file, generating one", change_page=False)
+            classcharts.save_homework()
+        elif "homework.jsonl" not in os.listdir() and not state.WiFi.connected:
+            message.show("Offline: No Homework")
+            return False
+        
+        with open("homework.jsonl", "r") as f:
+            self.content_height = 0
+            self.box_heights = []
+            
+            hw_to_display = False
+            
+            for l in f:
+                l = ujson.loads(l) # load into json format
+
+                hw_to_display = True
+
+                completed = l.get("completed")
+
+                if not completed:
+                    # List homework tasks that are not completed
+                    title = l.get("title")
+                    teacher = l.get("teacher")
+                    subject = l.get("subject")
+                    due_date = l.get("due_date")
+                    due_date_str = l.get("due_date_str")
+                    late = l.get("late")
+
+                    start_y = 15 + self.scroll_distance + self.content_height # Box start
+                    line_y = start_y + 5 # Text start
+
+                    box_height = 0
+                    # Increase box height for every line of text
+                    if title: box_height += measure_wrapped_text(title, 300, 12, 14) + 5
+                    if subject: box_height += 14
+                    if due_date: box_height += 14
+                    box_height += 5 # Padding
+
+                    display.set_pen(WHITE)
+                    display.line(0, box_height + line_y - 1, 320, box_height + line_y - 1) # Bottom bar
+
+                    # Text
+                    display.set_pen(WHITE)
+                    if title:
+                        display.text(title, 5, line_y, wordwrap=300, scale=2)
+                        line_y += measure_wrapped_text(title, 300, 12, 14) + 5
+
+                    if subject:
+                        display.text(f"{teacher} | {subject}", 5, line_y, scale=2)
+                        line_y += 14
+
+                    if due_date:
+                        if late:
+                            # Set text to red if task is late
+                            display.set_pen(RED)
+
+                        display.text(f"Due on {due_date_str}", 5, line_y, scale=2)
+                        line_y += 14
+
+                    box_height += 5
+                    self.box_heights.append(box_height)
+
+                    self.content_height += box_height
+                        
+            if not hw_to_display:
+                message.show("All homework completed!", change_page=False)
+            
+        bar.draw() # Draw menu bar on top
+    
+    def scroll(self, direction):
+        # VIBECODED FUNCTION #
+        visible_height = 225
+        scroll_offset = -self.scroll_distance # Scroll distance
+        curr_height = 0
+
+        if self.content_height > 0:
+            if direction == "down":
+                for box_height in self.box_heights:
+                    # Set the top and bottom of the box
+                    box_top = curr_height
+                    box_bottom = curr_height + box_height
+
+                    if box_bottom > scroll_offset + visible_height: # If the bottom of the box is off screen
+                        self.scroll_distance = -(box_bottom - visible_height) # Set the scroll distance to the difference between the bottom of the box and the bottom of the screen
+                        self.draw()
+                        return
+
+
+                    curr_height += box_height # Move on to next box coords (y value)
+
+            elif direction == "up":
+                for index, box_height in enumerate(self.box_heights):
+                    # Set top of box
+                    box_top = curr_height
+
+                    if box_top >= scroll_offset: # If the top of the box is off screen
+                        if index > 0: # If this is not the first box
+                            self.scroll_distance = -sum(self.box_heights[:index - 1]) # Scroll the distance of all the boxes after it
+                        else:
+                            # This is the first box so we scroll all the way to the top
+                            self.scroll_distance = 0
+                        self.draw()
+                        return
+
+                    curr_height += box_height # Move on to next box coords (y value)
+
 class Menu:
     def __init__(self):
-        self.entries = ["Timetable", "Behaviour", "Attendance", "Refresh Data", "Connect to WiFi and Get Data"]
+        self.entries = ["Timetable", "Behaviour", "Attendance", "Homework", "Connect and Refresh Data"]
         self.selected = 0
         
     def go(self):

@@ -15,6 +15,7 @@ bar = ui.MenuBar()
 timetable = ui.Timetable()
 behaviour = ui.Behaviour()
 attendance = ui.Attendence()
+homework = ui.Homework()
 classcharts = ui.ClassCharts()
 bootscreen = ui.BootScreen()
 
@@ -47,12 +48,16 @@ def press_handler(btn, pattern):
             if btn.get_id() == BUTTON_X:
                 if ui.page == "timetable": # Scroll events page up
                     timetable.scroll(direction="up")
+                elif ui.page == "homework":
+                    homework.scroll(direction="up")
                 elif ui.page == "menu": # Highlight the button above
                     menu.scroll(direction="up")
 
             elif btn.get_id() == BUTTON_Y:
                 if ui.page == "timetable":  # Scroll events page down
                     timetable.scroll(direction="down")
+                elif ui.page == "homework":
+                    homework.scroll(direction="down")
                 elif ui.page == "menu": # Highlight the button below
                     menu.scroll(direction="down")
 
@@ -68,19 +73,11 @@ def menu_exec():
         
         elif name == "Attendance":
             attendance.go()
-            
-        elif name == "Refresh Data":
-            if state.WiFi.connected:
-                message.show("Getting data from ClassCharts")
-                for text in classcharts.save_data():
-                    message.show(text)
-            else:
-                message.show("OFFLINE")
-                utime.sleep_ms(3000)
-
-            timetable.go()
         
-        elif name == "Connect to WiFi and Get Data":
+        elif name == "Homework":
+            homework.go()        
+        
+        elif name == "Connect and Refresh Data":
             for text in wifi.wifi_connect():
                 message.show(text)
     
@@ -132,7 +129,6 @@ def init():
     bootscreen.print("Starting")
     for text in wifi.wifi_connect():
         bootscreen.print(text)
-    
     if state.WiFi.connected:
         for text in clock.set_time_ntp():
             bootscreen.print(text)

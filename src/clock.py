@@ -62,8 +62,17 @@ def set_time_ntp():
     rtc.datetime((t[0], t[1], t[2], t[6] + 1, t[3], t[4], t[5], 0))
     yield "Time set"
 
+def date_to_secs(date):
+    # Returns epoch secs from a string in YYYY-MM-DD
+    year = int(date[0:4])
+    month = int(date[5:7])
+    day = int(date[8:10])
+
+    secs = utime.mktime([year, month, day, 0, 0, 0, 0, 0])
+    return secs
+
 def today():
-    # Returns date as a string in DD-MM-YYYY as needed by the classchars API
+    # Returns date as a string in YYYY-MM-DD as needed by the classchars API
     time = utime.localtime()
         
     day = str(time[2]) if time[2] > 9 else f"0{time[2]}"
