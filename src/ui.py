@@ -1,7 +1,6 @@
 from picographics import PicoGraphics, DISPLAY_PICO_DISPLAY_2, PEN_P4 # type: ignore
 from pimoroni import RGBLED # type: ignore
 import ujson # type: ignore
-import utime # type: ignore
 import os
 
 #import battery
@@ -11,7 +10,6 @@ import state
 from classcharts import ClassCharts
 
 display = PicoGraphics(display=DISPLAY_PICO_DISPLAY_2, pen_type=PEN_P4)
-led = RGBLED(6, 7, 8)
 brightness = config.BRIGHTNESS
 
 classcharts = ClassCharts()
@@ -28,7 +26,7 @@ YELLOW = display.create_pen(255, 255, 0)
 def setup():
     global page, display
     display.clear()
-    led.set_rgb(0, 0, 0)
+    led.off()
     display.set_font("bitmap6")
     display.set_backlight(config.BRIGHTNESS)
     page = "timetable"
@@ -51,7 +49,7 @@ def screen_on():
 def cleanup():
     display.clear()
     display.set_backlight(0)
-    led.set_rgb(0, 0, 0)
+    led.off()
 
 def measure_wrapped_text(text, wrap_px, char_width, line_height):
     # VIBECODED FUNCTION #
@@ -65,6 +63,17 @@ def measure_wrapped_text(text, wrap_px, char_width, line_height):
         lines += (len(paragraph) + chars_per_line - 1) // chars_per_line
 
     return lines * line_height
+
+class LED:
+    def __init__(self):
+        self.led = RGBLED(6, 7, 8)
+        self.off()
+    
+    def off(self):
+        self.led.set_rgb(0, 0, 0)
+    
+    def notify(self):
+        self.led.set_rgb(0, 0, 255)
 
 class BootScreen:
     def draw(self):
@@ -417,6 +426,7 @@ class Homework:
             self.box_heights = []
             
             hw_to_display = False
+            homework_seen_status = []
             
             for l in f:
                 l = ujson.loads(l) # load into json format
@@ -433,6 +443,7 @@ class Homework:
                     due_date = l.get("due_date")
                     due_date_str = l.get("due_date_str")
                     late = l.get("late")
+                    homework_seen_status.append(l.get("seen"))
 
                     start_y = 15 + self.scroll_distance + self.content_height # Box start
                     line_y = start_y + 5 # Text start
@@ -472,6 +483,11 @@ class Homework:
                         
             if not hw_to_display:
                 message.show("All homework completed!", change_page=False)
+            
+            print(homework_seen_status)
+            if False not in homework_seen_status:
+                # Turn led off if there are no unseen homeworks
+                led.off()
             
         bar.draw() # Draw menu bar on top
     
@@ -572,5 +588,6 @@ class Message:
         
         display.update()
 
+led = LED()
 message = Message()
 bar = MenuBar()

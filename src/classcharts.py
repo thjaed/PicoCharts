@@ -15,13 +15,13 @@ class ClassCharts:
     def save_data(self):
         yield self.login()
         yield "Getting Timetable"
-        yield self.save_timetable(login=False)
+        self.save_timetable(login=False)
         yield "Getting Behaviour"
-        yield self.save_behaviour(login=False)
+        self.save_behaviour(login=False)
         yield "Getting Attendance"
-        yield self.save_attendance(login=False)
+        self.save_attendance(login=False)
         yield "Getting Homework"
-        yield self.save_homework(login=False)
+        self.save_homework(login=False)
 
         yield "All data saved"
 
@@ -66,7 +66,6 @@ class ClassCharts:
                 ujson.dump(event, f)
                 f.write("\n")
         
-        return "Saved Timetable"
         
     def save_behaviour(self, login=True):
         if login: self.login()
@@ -108,8 +107,7 @@ class ClassCharts:
             for line in behaviour:
                 ujson.dump(line, f)
                 f.write("\n")
-        
-        return "Saved Behaviour"
+
 
     def save_attendance(self, login=True):
         if login: self.login()
@@ -145,7 +143,6 @@ class ClassCharts:
                 ujson.dump(line, f)
                 f.write("\n")
         
-        return "Saved Attendance"
 
     def save_homework(self, login=True):
         if login: self.login()
@@ -154,6 +151,8 @@ class ClassCharts:
         data = response["data"]
 
         homeworks = []
+
+        unseen_tasks = False
 
         for task in data:
             title = task["title"]
@@ -166,9 +165,10 @@ class ClassCharts:
                 seen = True
             else:
                 seen = False
+                unseen_tasks = True
 
             if task["status"]["ticked"] == "yes":
-                completed = True 
+                completed = True
             else:
                 completed = False
             
@@ -199,4 +199,4 @@ class ClassCharts:
                 ujson.dump(line, f)
                 f.write("\n")
         
-        return "Saved Homework"
+        return unseen_tasks

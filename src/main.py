@@ -18,6 +18,7 @@ attendance = ui.Attendence()
 homework = ui.Homework()
 classcharts = ui.ClassCharts()
 bootscreen = ui.BootScreen()
+led = ui.LED()
 
 fps = 30
 display_update_time = int((1/fps) * 1000) # Calculates time to sleep in ms
@@ -122,6 +123,16 @@ async def sleep_handler():
         if time - config.SLEEP_TIME_SEC > state.UI.last_interaction_time and state.UI.sleeping == False:
             device_to_sleep()
         await asyncio.sleep_ms(display_update_time)
+
+async def homework_checker():
+    # Periodically gets homework and checks for new tasks
+    while True:
+        if state.WiFi.connected:
+            unseen_tasks = classcharts.save_homework()
+            if unseen_tasks:
+                led.notify()
+        await asyncio.sleep(30)
+            
     
 def init():
     # Startup sequence
@@ -138,6 +149,7 @@ def init():
     # Starts functions that need to be run asyncrously
     asyncio.create_task(update_menu_bar())
     asyncio.create_task(monitor_buttons())
+    asyncio.create_task(homework_checker())
     
     # Draw UI
     timetable.go()
