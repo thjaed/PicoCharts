@@ -73,7 +73,7 @@ class LED:
         self.led.set_rgb(0, 0, 0)
     
     def notify(self):
-        self.led.set_rgb(0, 0, 255)
+        self.led.set_rgb(0, 0, 10)
 
 class BootScreen:
     def draw(self):
@@ -105,7 +105,6 @@ class BootScreen:
 
 class MenuBar:
     def draw(self):
-        display.set_font("bitmap6")
         display.set_pen(GREY)
         display.rectangle(0, 0, 320, 15) # Top bar
         display.set_pen(WHITE)
@@ -582,7 +581,6 @@ class Message:
         text_width = display.measure_text(text, scale=2)
         
         print(text)
-        display.set_font("bitmap6")
         display.set_pen(WHITE)
         display.text(text, int((320 / 2) - (text_width / 2)), 108, scale=2)
         

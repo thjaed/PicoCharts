@@ -7,22 +7,34 @@ import state
 
 WIFI_TIMEOUT = 10
 
-def test_connection(type):
+def test_connection():
     try:
-        if type == "BASIC":
-            # Basic connectivity test
-            # Needed because if DNS lookup fails, getaddrinfo hangs indefinetly
-            addr = usocket.getaddrinfo("8.8.8.8", 53)[0][-1]
-        elif type == "WEB":
-            # ClassCharts connectivity test with DNS lookup
-            addr = usocket.getaddrinfo("classcharts.com", 80)[0][-1]
+        # Basic connectivity test
+        # Needed because if DNS lookup fails, usocket.getaddrinfo hangs indefinetly
+        addr = usocket.getaddrinfo("8.8.8.8", 53)[0][-1]
         s = usocket.socket()
         s.settimeout(3)
         s.connect(addr)
         s.close()
-        return True
-    except Exception as e:
+    except:
+        state.WiFi.connected = False
         return False
+    
+    try:
+        # ClassCharts connectivity test with DNS lookup
+        addr = usocket.getaddrinfo("classcharts.com", 80)[0][-1]
+        s = usocket.socket()
+        s.settimeout(3)
+        s.connect(addr)
+        s.close()
+    except:
+        state.WiFi.connected = False
+        return False
+    
+    state.WiFi.connected = True
+    return True
+
+
     
 def wifi_connect():
     yield "Finding WiFi Networks"
@@ -66,15 +78,14 @@ def wifi_connect():
                 sleep(1)
         
             # connection test
-            basic_test = test_connection(type="BASIC")
+            test = test_connection()
 
-            if wlan.status() != 3 or basic_test == False: # if not connected
+            if wlan.status() != 3 or test == False: # if not connected
                 yield "Failed to connect"
                 if tries == len(found_nets):
                     state.WiFi.connected = False
                     break
 
-            elif basic_test and test_connection(type="WEB"): # if connected
-                state.WiFi.connected = True
+            elif test == True: # if connected
                 yield "Connection Succesful"
                 break

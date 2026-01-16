@@ -127,12 +127,18 @@ async def sleep_handler():
 async def homework_checker():
     # Periodically gets homework and checks for new tasks
     while True:
+        wifi.test_connection()
         if state.WiFi.connected:
             unseen_tasks = classcharts.save_homework()
             if unseen_tasks:
                 led.notify()
+        await asyncio.sleep(120)
+
+async def connection_tester():
+    # Periodically check for wifi connectivity
+    while True:
+        wifi.test_connection()
         await asyncio.sleep(30)
-            
     
 def init():
     # Startup sequence
@@ -150,6 +156,7 @@ def init():
     asyncio.create_task(update_menu_bar())
     asyncio.create_task(monitor_buttons())
     asyncio.create_task(homework_checker())
+    asyncio.create_task(connection_tester())
     
     # Draw UI
     timetable.go()
