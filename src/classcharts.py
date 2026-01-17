@@ -29,6 +29,7 @@ def convert_text(text):
     text = text.replace("\n", " ")
     text = text.replace("§§", "\n\n")
     text = text.replace("&nbsp;", " ")
+    text = text.replace("\"", "'")
 
     # remove useless spaces
     while "  " in text:

@@ -408,7 +408,6 @@ class Homework:
     def go(self):
         global page
         page = "homework"
-        self.scroll_distance = 0
         self.draw()
         bar.draw()
     
@@ -567,9 +566,8 @@ class HomeworkViewer:
     def go(self, data):
         global page
         page = "homework_viewer"
-
+        self.desc_start_offset = 0
         self.data = ujson.loads(data) # load into json format
-
         self.draw()
         bar.draw()
     
@@ -625,7 +623,7 @@ class HomeworkViewer:
     def scroll(self, direction):
         visible_area = 240 - header_end
         if direction == "down":
-            if (measure_wrapped_text(description, 300, 12, 14) + self.desc_start_offset - 14) > visible_area:
+            if (measure_wrapped_text(description, 300, 12, 14) + self.desc_start_offset + 5) > visible_area:
                 self.desc_start_offset -= 14
 
         elif direction == "up":
