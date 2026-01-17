@@ -39,18 +39,24 @@ def press_handler(btn, pattern):
                 elif ui.page == "attendance":
                     attendance.toggle_time_range()
                     attendance.draw()
+                elif ui.page == "homework":
+                    homework.select()
 
             if btn.get_id() == BUTTON_B:
-                if ui.page != "menu": # Go to menu page
-                    menu.go()
+                if ui.page == "homework_viewer":
+                    homework.go()
                 elif ui.page == "menu": # Go to timetable page
                     timetable.go()
+                elif ui.page != "menu": # Go to menu page
+                    menu.go()
 
             if btn.get_id() == BUTTON_X:
                 if ui.page == "timetable": # Scroll events page up
                     timetable.scroll(direction="up")
                 elif ui.page == "homework":
-                    homework.scroll_selected(direction="up")
+                    homework.scroll(direction="up")
+                elif ui.page == "homework_viewer":
+                    ui.hwviewer.scroll(direction="up")
                 elif ui.page == "menu": # Highlight the button above
                     menu.scroll(direction="up")
 
@@ -58,7 +64,9 @@ def press_handler(btn, pattern):
                 if ui.page == "timetable":  # Scroll events page down
                     timetable.scroll(direction="down")
                 elif ui.page == "homework":
-                    homework.scroll_selected(direction="down")
+                    homework.scroll(direction="down")
+                elif ui.page == "homework_viewer":
+                    ui.hwviewer.scroll(direction="down")
                 elif ui.page == "menu": # Highlight the button below
                     menu.scroll(direction="down")
 

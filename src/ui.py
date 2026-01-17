@@ -458,7 +458,6 @@ class Homework:
                     if due_date_str: box_height += 14
                     box_height += 5 # Padding
 
-                    print(title, self.selected, index - 1)
                     if self.selected == index:
                         selected = True
                     
@@ -490,7 +489,7 @@ class Homework:
                             # Set text to red if task is late
                             display.set_pen(RED)
                         else:
-                            display.set_pen(BLUE)
+                            display.set_pen(GREEN)
 
                         display.text(f"Due on {due_date_str}", 5, line_y, scale=2)
                         line_y += 14
@@ -509,6 +508,13 @@ class Homework:
                 led.off()
             
         bar.draw() # Draw menu bar on top
+    
+    def select(self):
+         with open("homework.jsonl", "r") as f:
+            for index, l in enumerate(f):
+                if index == self.selected:
+                    # call hwviewer with data as a param
+                    hwviewer.go(l)
     
     def scroll(self, direction):
         # BASED ON VIBECODED FUNCTION #
@@ -552,6 +558,81 @@ class Homework:
                     curr_height += box_height # Move on to next box coords (y value)
                 
             self.draw()
+
+class HomeworkViewer:
+    def __init__(self):
+        self.desc_start_offset = 0
+        self.data = None
+
+    def go(self, data):
+        global page
+        page = "homework_viewer"
+
+        self.data = ujson.loads(data) # load into json format
+
+        self.draw()
+        bar.draw()
+    
+    def draw(self):
+        global header_end, description
+        display.set_pen(GREY)
+        display.clear()
+
+        title = self.data.get("title")
+        teacher = self.data.get("teacher")
+        subject = self.data.get("subject")
+        due_date_str = self.data.get("due_date_str")
+        late = self.data.get("late")
+        description = self.data.get("description")
+        
+        line_y = 20 # Text start
+        header_end = 10 + 33 + measure_wrapped_text(title, 300, 12, 14) + 15
+
+        desc_start = self.desc_start_offset + header_end + 5
+
+        display.set_pen(WHITE)
+        display.text(description, 5, desc_start, wordwrap=300, scale=2)
+
+        # Draw header over description
+        display.set_pen(GREY)
+        display.rectangle(0, 0, 320, header_end)
+
+        # Text
+        display.set_pen(WHITE)
+        display.text(title, 5, line_y, wordwrap=300, scale=2)
+        line_y += measure_wrapped_text(title, 300, 12, 14) + 5
+
+        display.text(f"{teacher} | {subject}", 5, line_y, scale=2)
+        line_y += 14
+
+        if late:
+            # Set text to red if task is late
+            display.set_pen(RED)
+        else:
+            display.set_pen(GREEN)
+
+        display.text(f"Due on {due_date_str}", 5, line_y, scale=2)
+        line_y += 14
+
+        display.set_pen(WHITE)
+        
+        line_y += 5
+        display.line(0, header_end, 320, header_end) # Bottom bar
+        line_y += 10
+
+        bar.draw()
+
+    def scroll(self, direction):
+        visible_area = 240 - header_end
+        if direction == "down":
+            if (measure_wrapped_text(description, 300, 12, 14) + self.desc_start_offset - 14) > visible_area:
+                self.desc_start_offset -= 14
+
+        elif direction == "up":
+            if self.desc_start_offset < 0:
+                self.desc_start_offset += 14  
+
+        self.draw()
 
 class Menu:
     def __init__(self):
@@ -614,4 +695,5 @@ class Message:
 
 led = LED()
 message = Message()
+hwviewer = HomeworkViewer()
 bar = MenuBar()
