@@ -402,6 +402,8 @@ class Homework:
         self.box_heights = []
         self.scroll_distance = 0
         self.content_height = 0
+        self.selected = 1
+        self.task_count = 0
         
     def go(self):
         global page
@@ -427,11 +429,13 @@ class Homework:
             
             hw_to_display = False
             homework_seen_status = []
+            self.task_count = 0
             
-            for l in f:
+            for index, l in enumerate(f):
                 l = ujson.loads(l) # load into json format
 
                 hw_to_display = True
+                selected = False
 
                 completed = l.get("completed")
 
@@ -454,11 +458,25 @@ class Homework:
                     if due_date_str: box_height += 14
                     box_height += 5 # Padding
 
-                    display.set_pen(WHITE)
-                    display.line(0, box_height + line_y - 1, 320, box_height + line_y - 1) # Bottom bar
+                    print(title, self.selected, index - 1)
+                    if self.selected == index:
+                        selected = True
+                    
+                    if selected:
+                        display.set_pen(WHITE)
+                        display.rectangle(0, line_y - 5, 320, box_height + 5)
+                    else:
+                        display.set_pen(GREY)
+                        display.rectangle(0, line_y - 5, 320, box_height + 5)
 
                     # Text
-                    display.set_pen(WHITE)
+                    if selected:
+                        display.set_pen(BLACK)
+                    else:
+                        display.set_pen(WHITE)
+
+                    display.line(0, box_height + line_y - 1, 320, box_height + line_y - 1) # Bottom bar
+
                     if title:
                         display.text(title, 5, line_y, wordwrap=300, scale=2)
                         line_y += measure_wrapped_text(title, 300, 12, 14) + 5
@@ -481,6 +499,7 @@ class Homework:
                     self.box_heights.append(box_height)
 
                     self.content_height += box_height
+                    self.task_count += 1
                         
             if not hw_to_display:
                 message.show("All homework completed!", change_page=False)
@@ -492,31 +511,19 @@ class Homework:
         bar.draw() # Draw menu bar on top
     
     def scroll(self, direction):
-        # VIBECODED FUNCTION #
+        # BASED ON VIBECODED FUNCTION #
         visible_height = 225
         scroll_offset = -self.scroll_distance # Scroll distance
         curr_height = 0
 
         if self.content_height > 0:
-            if direction == "down":
-                for box_height in self.box_heights:
-                    # Set the top and bottom of the box
-                    box_top = curr_height
-                    box_bottom = curr_height + box_height
+            if direction == "up":
+                if self.selected > 1:
+                    self.selected -= 1
 
-                    if box_bottom > scroll_offset + visible_height: # If the bottom of the box is off screen
-                        self.scroll_distance = -(box_bottom - visible_height) # Set the scroll distance to the difference between the bottom of the box and the bottom of the screen
-                        self.draw()
-                        return
-
-
-                    curr_height += box_height # Move on to next box coords (y value)
-
-            elif direction == "up":
                 for index, box_height in enumerate(self.box_heights):
                     # Set top of box
                     box_top = curr_height
-
                     if box_top >= scroll_offset: # If the top of the box is off screen
                         if index > 0: # If this is not the first box
                             self.scroll_distance = -sum(self.box_heights[:index - 1]) # Scroll the distance of all the boxes after it
@@ -527,6 +534,24 @@ class Homework:
                         return
 
                     curr_height += box_height # Move on to next box coords (y value)
+
+            elif direction == "down":
+                if self.selected < self.task_count:
+                    self.selected += 1
+
+                for index, box_height in enumerate(self.box_heights):
+                    # Set the top and bottom of the box
+                    box_top = curr_height
+                    box_bottom = curr_height + box_height
+
+                    if (box_bottom > scroll_offset + visible_height) and (self.selected - 1 == index): # if selected box is off page
+                        self.scroll_distance = -(box_bottom - visible_height) # scroll to the bottom of this box
+                        self.draw()
+                        return
+
+                    curr_height += box_height # Move on to next box coords (y value)
+                
+            self.draw()
 
 class Menu:
     def __init__(self):

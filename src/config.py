@@ -13,3 +13,5 @@ BRIGHTNESS = 0.8
 NTP_HOST = "pool.ntp.org"
 # Seconds until wifi connection script gives up
 WIFI_TIMEOUT = 20
+# Force offline mode
+FORCE_OFFLINE = True

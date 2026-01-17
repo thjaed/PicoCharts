@@ -50,7 +50,7 @@ def press_handler(btn, pattern):
                 if ui.page == "timetable": # Scroll events page up
                     timetable.scroll(direction="up")
                 elif ui.page == "homework":
-                    homework.scroll(direction="up")
+                    homework.scroll_selected(direction="up")
                 elif ui.page == "menu": # Highlight the button above
                     menu.scroll(direction="up")
 
@@ -58,7 +58,7 @@ def press_handler(btn, pattern):
                 if ui.page == "timetable":  # Scroll events page down
                     timetable.scroll(direction="down")
                 elif ui.page == "homework":
-                    homework.scroll(direction="down")
+                    homework.scroll_selected(direction="down")
                 elif ui.page == "menu": # Highlight the button below
                     menu.scroll(direction="down")
 
