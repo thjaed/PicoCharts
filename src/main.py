@@ -9,16 +9,17 @@ import wifi
 import config
 import state
 
-message = ui.Message()
+message = ui.message
+bar = ui.bar
+led = ui.led
+hwviewer = ui.hwviewer
 menu = ui.Menu()
-bar = ui.MenuBar()
 timetable = ui.Timetable()
 behaviour = ui.Behaviour()
 attendance = ui.Attendence()
 homework = ui.Homework()
 classcharts = ui.ClassCharts()
 bootscreen = ui.BootScreen()
-led = ui.LED()
 
 fps = 30
 display_update_time = int((1/fps) * 1000) # Calculates time to sleep in ms
@@ -56,7 +57,7 @@ def press_handler(btn, pattern):
                 elif ui.page == "homework":
                     homework.scroll(direction="up")
                 elif ui.page == "homework_viewer":
-                    ui.hwviewer.scroll(direction="up")
+                    hwviewer.scroll(direction="up")
                 elif ui.page == "menu": # Highlight the button above
                     menu.scroll(direction="up")
 
@@ -66,7 +67,7 @@ def press_handler(btn, pattern):
                 elif ui.page == "homework":
                     homework.scroll(direction="down")
                 elif ui.page == "homework_viewer":
-                    ui.hwviewer.scroll(direction="down")
+                    hwviewer.scroll(direction="down")
                 elif ui.page == "menu": # Highlight the button below
                     menu.scroll(direction="down")
 
