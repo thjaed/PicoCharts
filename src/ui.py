@@ -22,6 +22,7 @@ BLACK = display.create_pen(0, 0, 0)
 GREEN = display.create_pen(0, 255, 0)
 RED = display.create_pen(255, 0, 0)
 YELLOW = display.create_pen(255, 255, 0)
+BLUE = display.create_pen(0, 0, 255)
 
 def setup():
     global page, display
@@ -439,7 +440,6 @@ class Homework:
                     title = l.get("title")
                     teacher = l.get("teacher")
                     subject = l.get("subject")
-                    due_date = l.get("due_date")
                     due_date_str = l.get("due_date_str")
                     late = l.get("late")
                     homework_seen_status.append(l.get("seen"))
@@ -451,7 +451,7 @@ class Homework:
                     # Increase box height for every line of text
                     if title: box_height += measure_wrapped_text(title, 300, 12, 14) + 5
                     if subject: box_height += 14
-                    if due_date: box_height += 14
+                    if due_date_str: box_height += 14
                     box_height += 5 # Padding
 
                     display.set_pen(WHITE)
@@ -467,10 +467,12 @@ class Homework:
                         display.text(f"{teacher} | {subject}", 5, line_y, scale=2)
                         line_y += 14
 
-                    if due_date:
+                    if due_date_str:
                         if late:
                             # Set text to red if task is late
                             display.set_pen(RED)
+                        else:
+                            display.set_pen(BLUE)
 
                         display.text(f"Due on {due_date_str}", 5, line_y, scale=2)
                         line_y += 14
@@ -483,7 +485,6 @@ class Homework:
             if not hw_to_display:
                 message.show("All homework completed!", change_page=False)
             
-            print(homework_seen_status)
             if False not in homework_seen_status:
                 # Turn led off if there are no unseen homeworks
                 led.off()

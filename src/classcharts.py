@@ -5,6 +5,50 @@ from uclasscharts_api import StudentClient
 import clock
 import secrets
 
+def strip_tags(text):
+    # removes HTML tags from a string
+    out = ""
+    in_tag = False
+    for c in text:
+        if c == "<":
+            # start of tag
+            in_tag = True
+        elif c == ">":
+            # end of tag
+            in_tag = False
+        elif not in_tag:
+            # add character to output if not inside tag
+            out += c
+    return out
+
+def convert_text(text):
+    # replace chars
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = text.replace("</p>", "§§")
+    text = text.replace("<br>", " ")
+    text = text.replace("\n", " ")
+    text = text.replace("§§", "\n\n")
+    text = text.replace("&nbsp;", " ")
+
+    # remove useless spaces
+    while "  " in text:
+        text = text.replace("  ", " ")
+
+    # remove spaces after newlines
+    text = text.replace("\n ", "\n")
+
+    # remove useless blank lines
+    while "\n\n\n" in text:
+        text = text.replace("\n\n\n", "\n\n")
+    
+    # remove any leftover HTML tags
+    text = strip_tags(text)
+
+    # remove spaces at start and end
+    text = text.strip()
+
+    return text
+
 class ClassCharts:
     def login(self):
         # Authenticate with ClassCharts API
@@ -160,6 +204,7 @@ class ClassCharts:
             subject = task["subject"]
             due_date = task["due_date"]
             issue_date = task["issue_date"]
+            description = convert_text(task["description"])
         
             if task["status"]["first_seen_date"] != None:
                 seen = True
@@ -180,18 +225,18 @@ class ClassCharts:
                 late = False
 
             due_date_str = clock.get_date(due_date_secs)
+            issue_date_str = clock.get_date(clock.date_to_secs(issue_date))
             
-
             homeworks.append({
                 "title": title,
                 "teacher": teacher,
                 "subject": subject,
-                "due_date": due_date,
                 "due_date_str": due_date_str,
-                "issue_date": issue_date,
+                "issue_date_str": issue_date_str,
                 "seen": seen,
                 "completed": completed,
-                "late": late
+                "late": late,
+                "description": description
             })
 
         with open("homework.jsonl", "w") as f:
