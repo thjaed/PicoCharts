@@ -37,10 +37,16 @@ def get_date(secs=None): # Returns a date string from timestamp
     return f"{day} {time[2]} {month}"
     
 def clock_str_to_secs(clock_str=get_clock()):
-    # Returns mins passed in a day from a time in HH:MM form
-    hrs = int(clock_str[0:2])
-    mins = int(clock_str[3:5])
-    return (hrs * 60) + mins
+    # Returns timestamp from a time in HH:MM form
+    current_time = utime.localtime()
+
+    year = current_time[0]
+    month = current_time[1]
+    day = current_time [2]
+    hour = int(clock_str[0:2])
+    min = int(clock_str[3:5])
+
+    return utime.mktime([year, month, day, hour, min, 0, 0, 0])
     
 def set_time_ntp():
     yield "Setting time"

@@ -100,8 +100,8 @@ class ClassCharts:
                 "subject": subject,
                 "teacher": teacher,
                 "room": room,
-                "start_time": start_time,
-                "end_time": end_time,
+                "time": f"{start_time} to {end_time}",
+                "end_time_secs": clock.clock_str_to_secs(end_time)
             }
             timetable.append(event)
         
@@ -143,8 +143,8 @@ class ClassCharts:
             # Store in json format
             behaviour.append({
                 "time": time,
-                "positive": total_positive,
-                "negative": total_negative
+                "positive": str(total_positive),
+                "negative": f"-{total_negative}" if total_negative > 0 else str(total_negative)
             })
 
         # Save data to file
@@ -174,12 +174,12 @@ class ClassCharts:
             # Store in json format
             attendance.append({
                 "time": time,
-                "percentage": meta["percentage"]
+                "percentage": int(meta["percentage"])
             })
         
         attendance.append({
             "time": "august",
-            "percentage": since_august
+            "percentage": int(since_august)
         })
 
         # Save data to file
