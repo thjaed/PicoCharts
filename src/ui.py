@@ -15,6 +15,8 @@ brightness = config.BRIGHTNESS
 
 classcharts = ClassCharts()
 
+WIDTH, HEIGHT = display.get_bounds()
+
 # Colours
 WHITE = display.create_pen(255, 255, 255)
 GREY = display.create_pen(80, 80, 80)
@@ -412,19 +414,27 @@ class Homework:
         self.data = []
         self.box_heights = []
         self.scroll_distance = 0
-        self.content_height = 0
+        self.cumulative_box_height = 0
         self.selected = 0
+
+        self.content_start = 15    # where menu bar ends
+        self.y_top_pad = 5         # space between top of text and top of box
+        self.y_bot_pad = 5         # space between bottom of text and bottom of box
+        self.x_pad = 5             # space between left side of screen and where text starts
+        self.line_height = 14      # height of each line at scale=2 inc. padding
+        self.title_pad = 5         # space after title to visually separate it
         
     def go(self):
         global page
         page = "homework"
 
-        # Load data from file into self.data
         self.data = []
-        if "homework.jsonl" in os.listdir():
+        if "homework.jsonl" in os.listdir(): # if file exists
             with open("homework.jsonl", "r") as f:
                 for l in f:
+                    # Load data from file into self.data
                     l = ujson.loads(l)
+
                     self.data.append({
                         "title": l.get("title"),
                         "teacher": l.get("teacher"),
@@ -438,23 +448,22 @@ class Homework:
                     })
         else:
             message.show("No homework file!", change_page=False)
-            return False
+            return False # dont continue to draw
         
         self.draw()
-        bar.draw()
     
     def draw(self):
         display.set_pen(GREY)
         display.clear()
         
-        self.content_height = 0
+        self.cumulative_box_height = 0
         self.box_heights = []
         unseen_hw = False
             
         if len(self.data) > 0:
-            for index, l in enumerate(self.data):
-                selected = self.selected == index
-    
+            for index, l in enumerate(self.data): # loops through each homework task
+                selected = self.selected == index # True if this box is currently highlighted
+
                 title = l["title"]
                 teacher = l["teacher"]
                 subject = l["subject"]
@@ -463,55 +472,51 @@ class Homework:
                 completed = l["completed"]
 
                 if l["seen"] == False:
+                    # there is unseen homework if this task has not been seen
                     unseen_hw = True
 
-                start_y = 15 + self.scroll_distance + self.content_height # Box start
-                line_y = start_y + 5 # Text start
+                y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
+                y_text_start = y_box_start + self.y_top_pad
+                
+                title_height = measure_wrapped_text(title, WIDTH - 20, 12, self.line_height) + self.title_pad
+                box_height = self.y_top_pad + title_height + (self.line_height * 2) + self.y_bot_pad
 
-                box_height = 0
-                # Increase box height for every line of text
-                if title: box_height += measure_wrapped_text(title, 300, 12, 14) + 5
-                if subject: box_height += 14
-                if due_date_str: box_height += 14
-                box_height += 5 # Padding
+                # used for scrolling
+                self.box_heights.append(box_height)
 
+                # Box
                 if selected:
+                    # box white if highlighted
                     display.set_pen(WHITE)
-                    display.rectangle(0, line_y - 5, 320, box_height + 5)
                 else:
                     display.set_pen(GREY)
-                    display.rectangle(0, line_y - 5, 320, box_height + 5)
+                display.rectangle(0, y_box_start, WIDTH, box_height)
 
-                # Text
+                # Bottom Bar
                 if selected:
+                    # text white if highlighted
                     display.set_pen(BLACK)
                 else:
                     display.set_pen(WHITE)
 
-                display.line(0, box_height + line_y - 1, 320, box_height + line_y - 1) # Bottom bar
+                display.line(0, y_box_start + box_height, WIDTH, y_box_start + box_height - 1)
 
-                if title:
-                    display.text(title, 5, line_y, wordwrap=300, scale=2)
-                    line_y += measure_wrapped_text(title, 300, 12, 14) + 5
+                # Text
+                display.text(title, self.x_pad, y_text_start, wordwrap=WIDTH - 20, scale=2)
+                y_text_start += measure_wrapped_text(title, WIDTH - 20, 12, 14) + self.title_pad # increment line start
 
-                if subject:
-                    display.text(f"{teacher} | {subject}", 5, line_y, scale=2)
-                    line_y += 14
+                display.text(f"{teacher} | {subject}", self.x_pad, y_text_start, scale=2)
+                y_text_start += self.line_height
 
-                if due_date_str:
-                    if late:
-                        # Set text to red if task is late
-                        display.set_pen(RED)
-                    else:
-                        display.set_pen(GREEN)
+                if late:
+                    # Set text to red if task is late
+                    display.set_pen(RED)
+                else:
+                    display.set_pen(GREEN)
+                display.text(f"Due on {due_date_str}", self.x_pad, y_text_start, scale=2)
+                y_text_start += self.line_height
 
-                    display.text(f"Due on {due_date_str}", 5, line_y, scale=2)
-                    line_y += 14
-
-                box_height += 5
-                self.box_heights.append(box_height)
-
-                self.content_height += box_height
+                self.cumulative_box_height += box_height
 
             if unseen_hw:
                 led.off()
@@ -521,6 +526,7 @@ class Homework:
         bar.draw() # Draw menu bar on top
     
     def select(self):
+            # give assocaited task data to hwviewer
             hwviewer.go(self.data[self.selected])
     
     def scroll(self, direction):
@@ -529,7 +535,7 @@ class Homework:
         scroll_offset = -self.scroll_distance # Scroll distance
         curr_height = 0
 
-        if self.content_height > 0:
+        if self.cumulative_box_height > 0:
             if direction == "up":
                 if self.selected > 0:
                     self.selected -= 1
