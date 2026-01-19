@@ -3,12 +3,14 @@ import utime # type: ignore
 import sys
 
 from pybuttons import Button
+from classcharts import ClassCharts
 import ui
 import clock
 import wifi
 import config
 import state
 
+classcharts = ClassCharts()
 message = ui.message
 bar = ui.bar
 led = ui.led
@@ -18,7 +20,6 @@ timetable = ui.Timetable()
 behaviour = ui.Behaviour()
 attendance = ui.Attendence()
 homework = ui.Homework()
-classcharts = ui.ClassCharts()
 bootscreen = ui.BootScreen()
 
 fps = 30
@@ -204,4 +205,7 @@ try:
 except KeyboardInterrupt:
     print("Goodbye!")
     ui.cleanup()
+    sys.exit()
+except Exception as e:
+    message.show(e)
     sys.exit()

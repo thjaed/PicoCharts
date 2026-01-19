@@ -77,17 +77,19 @@ class LED:
         self.led.set_rgb(0, 0, 0)
     
     def notify(self):
-        self.led.set_rgb(0, 0, 10)
+        self.led.set_rgb(0, 0, 10) # dim blue
 
 class BootScreen:
     def draw(self):
         display.set_pen(BLACK)
         display.clear()
 
-        text_width = display.measure_text("PICOCHARTS", scale=4)
-
+        # Splash text
         display.set_pen(WHITE)
+
+        text_width = display.measure_text("PICOCHARTS", scale=4)
         display.text("PICOCHARTS", 160 -  text_width // 2, 50, scale=4)
+
         text_width = display.measure_text("by @thjaed", scale=2)
         display.text("by @thjaed", 160 -  text_width // 2, 80, scale=2)
 
@@ -97,7 +99,7 @@ class BootScreen:
         print(text)
         # Clear text area
         display.set_pen(BLACK)
-        display.rectangle(0, 190, 320, 50)
+        display.rectangle(0, 190, WIDTH, 50)
 
         # Write text
         display.set_pen(WHITE)
@@ -106,17 +108,21 @@ class BootScreen:
 
         display.update()
 
-
 class MenuBar:
+    def __init__(self):
+        # Constants
+        self.height = 15
+
     def draw(self):
         display.set_pen(GREY)
-        display.rectangle(0, 0, 320, 15) # Top bar
+        display.rectangle(0, 0, WIDTH, self.height) # Top bar
         display.set_pen(WHITE)
-        display.line(0, 14, 320, 14) # Line
+        display.line(0, self.height - 1, WIDTH, self.height - 1) # Line
 
         if not state.WiFi.connected:
             # Draw offline indicator instead of date and time
             display.set_pen(RED)
+
             text_width = display.measure_text("OFFLINE: DATA OUT OF DATE", scale=2)
             display.text("OFFLINE: DATA OUT OF DATE", 160 - text_width // 2, 0, scale=2)
         else:
@@ -145,11 +151,21 @@ class MenuBar:
 
 class Timetable:
     def __init__(self):
+        # Variables
         self.data = []
         self.box_heights = []
         self.scroll_distance = 0
-        self.content_height = 0
-        
+        self.cumulative_box_height = 0
+
+        # Constants
+        self.content_start = 15    # where menu bar ends
+        self.y_top_pad = 5         # space between top of text and top of box
+        self.y_bot_pad = 5         # space between bottom of text and bottom of box
+        self.x_pad = 5             # space between left side of screen and where text starts
+        self.line_height = 14      # height of each line at scale=2 inc. padding
+        self.title_height = 18     # height of title exc. padding
+        self.title_pad = 5         # space after title to visually separate it
+
     def go(self):
         global page
         page = "timetable"
@@ -180,48 +196,47 @@ class Timetable:
         display.clear()
               
         if len(self.data) > 0:
-            self.content_height = 0
+            self.cumulative_box_height = 0
             self.box_heights = []
 
-            for l in self.data:
+            for l in self.data: # loops through each lesson
                 subject = l["subject"]
                 time = l["time"]
                 room = l["room"]
                 teacher = l["teacher"]
 
-                start_y = 15 + self.scroll_distance + self.content_height # Box start
-                line_y = start_y # Text start
+                y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
+                y_text_start = y_box_start + self.y_top_pad
 
-                box_height = 0
-                # Increase box height for every line of text
-                if subject: box_height += 20
-                if time: box_height += 14
-                if room: box_height += 14
-                if teacher: box_height += 14
-                box_height += 2 # Padding
+                box_height = self.y_top_pad + (self.title_height + self.title_pad) + (self.line_height * 3) + self.y_bot_pad
+
+                # used for scrolling
                 self.box_heights.append(box_height)
 
+                # Box
                 display.set_pen(GREY)
-                display.rectangle(0, start_y, 320, box_height) # Event box
+                display.rectangle(0, y_text_start, WIDTH, box_height)
+
+                # Bottom bar
                 display.set_pen(WHITE)
-                display.line(0, box_height + line_y - 1, 320, box_height + line_y - 1) # Bottom bar
+                display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1)
 
                 # Text
                 display.set_pen(WHITE)
-                if subject:
-                    display.text(subject, 5, line_y, scale=3)
-                    line_y += 20
-                if time:
-                    display.text(time, 5, line_y, scale=2)
-                    line_y += 14
-                if room:
-                    display.text(room, 5, line_y, scale=2)
-                    line_y += 14
-                if teacher:
-                    display.text(teacher, 5, line_y, scale=2)
-                    line_y += 14
 
-                self.content_height += box_height
+                display.text(subject, self.x_pad, y_text_start, scale=3)
+                y_text_start += 20 # increment line start
+
+                display.text(time, self.x_pad, y_text_start, scale=2)
+                y_text_start += 14
+
+                display.text(room, self.x_pad, y_text_start, scale=2)
+                y_text_start += 14
+
+                display.text(teacher, self.x_pad, y_text_start, scale=2)
+                y_text_start += 14
+
+                self.cumulative_box_height += box_height
                         
         else:
             message.show("No more lessons today!", change_page=False)
@@ -234,7 +249,7 @@ class Timetable:
         scroll_offset = -self.scroll_distance # Scroll distance
         curr_height = 0
 
-        if self.content_height > 0:
+        if self.cumulative_box_height > 0:
             if direction == "down":
                 for box_height in self.box_heights:
                     # Set the top and bottom of the box
@@ -267,9 +282,15 @@ class Timetable:
 
 class Behaviour:
     def __init__(self):
+        # Variables
         self.data = []
-        self.time_ranges = ["august", "this_week", "last_week"]
         self.time_range = 0
+
+        # Constants
+        self.time_ranges = ["august", "this_week", "last_week"]
+        self.time_box_pad = 5      # space between start and end of text and box start and end
+        self.time_box_y = 200      # how high the time range box is
+        self.time_box_height = 20  # height of time range box
 
     def go(self):
         global page
@@ -305,23 +326,31 @@ class Behaviour:
         positives = self.data[self.time_range]["positive"]
         negatives = self.data[self.time_range]["negative"]
 
+        # Green box
         display.set_pen(GREEN)
-        display.rectangle(0, 0, 160, 240)
+        display.rectangle(0, 0, WIDTH // 2, HEIGHT)
         
+        # Red box
         display.set_pen(RED)
-        display.rectangle(160, 0, 160, 240)
+        display.rectangle(WIDTH // 2, 0, WIDTH // 2, HEIGHT)
 
         display.set_pen(WHITE)
 
+        # Positives label
         text_width = display.measure_text("Positives", scale=2)
-        display.text("Positives", (80 - int(text_width / 2)), 80, scale=2)
-        text_width = display.measure_text(positives, scale=4)
-        display.text(positives, (80 - int(text_width / 2)), 120, scale=4)
+        display.text("Positives", WIDTH // 4 - text_width // 2, WIDTH // 4, scale=2)
 
+        # Positives big number
+        text_width = display.measure_text(positives, scale=4)
+        display.text(positives, WIDTH // 4 - text_width // 2, HEIGHT // 2, scale=4)
+
+        # Negatives label
         text_width = display.measure_text("Negatives", scale=2)
-        display.text("Negatives", 160 + (80 - int(text_width / 2)), 80, scale=2)
+        display.text("Negatives", WIDTH // 2 + WIDTH // 4 - text_width // 2, WIDTH // 4, scale=2)
+
+        # Negatives big number
         text_width = display.measure_text(negatives, scale=4)
-        display.text(negatives, 160 + (80 - int(text_width / 2)), 120, scale=4)
+        display.text(negatives, WIDTH // 2 + WIDTH // 4 - text_width // 2, HEIGHT // 2, scale=4)
 
         if self.time_ranges[self.time_range] == "august":
             text = "Since August"
@@ -330,20 +359,32 @@ class Behaviour:
         elif self.time_ranges[self.time_range] == "last_week":
                 text = "Last Week"
         
+        # Time range box
         text_width = display.measure_text(text, scale=2)
         display.set_pen(WHITE)
-        display.rectangle((160 - (text_width // 2)) - 5, 200 - 5, text_width + 10, 20)
+        display.rectangle(
+                          (WIDTH // 2 - (text_width // 2)) - self.time_box_pad,
+                          self.time_box_y - self.time_box_pad,
+                          text_width + (self.time_box_pad * 2),
+                          self.time_box_height
+            )
 
         display.set_pen(BLACK)
-        display.text(text, (160 - (text_width // 2)), 200 - 2, scale=2)
+        display.text(text, (WIDTH // 2 - (text_width // 2)), self.time_box_y - 2, scale=2) # Time range text
 
         bar.draw()
 
 class Attendence:
     def __init__(self):
+        # Variables
         self.data = []
-        self.time_ranges = ["august", "this_week", "last_week"]
         self.time_range = 0
+
+        # Constants
+        self.time_ranges = ["august", "this_week", "last_week"]
+        self.time_box_pad = 5      # space between start and end of text and box start and end
+        self.time_box_y = 200      # how high the time range box is
+        self.time_box_height = 20  # height of time range box
 
     def go(self):
         global page
@@ -375,8 +416,12 @@ class Attendence:
         display.set_pen(GREY)
         display.clear()
         
-        percentage = self.data[self.time_range]["percentage"]
+        for l in self.data:
+            if l["time"] == self.time_ranges[self.time_range]:
+                percentage = l["percentage"]
+                break
         
+        # Colour coded background based on percentage
         if percentage > 95:
             display.set_pen(GREEN)
         elif percentage > 85:
@@ -384,14 +429,13 @@ class Attendence:
         else:
             display.set_pen(RED)
         
-        percentage = f"{percentage}%"
+        percentage = f"{percentage}%" # put % sign in front
 
-        display.rectangle(0, 0, 320, 240)
+        display.rectangle(0, 0, WIDTH, HEIGHT)
     
         display.set_pen(WHITE)
-
         text_width = display.measure_text(percentage, scale=5)
-        display.text(percentage, 160 - text_width // 2, 100, scale=5)
+        display.text(percentage, 160 - text_width // 2, 100, scale=5) # percentage number
 
         if self.time_ranges[self.time_range] == "august":
             text = "Since August"
@@ -400,20 +444,25 @@ class Attendence:
         elif self.time_ranges[self.time_range] == "last_week":
                 text = "Last Week"
         
+        # Time range box
         text_width = display.measure_text(text, scale=2)
         display.set_pen(WHITE)
-        display.rectangle((160 - (text_width // 2)) - 5, 200 - 5, text_width + 10, 20)
+        display.rectangle(
+                          (WIDTH // 2 - (text_width // 2)) - self.time_box_pad,
+                          self.time_box_y - self.time_box_pad,
+                          text_width + (self.time_box_pad * 2),
+                          self.time_box_height
+            )
 
         display.set_pen(BLACK)
-        display.text(text, (160 - (text_width // 2)), 200 - 2, scale=2)
+        display.text(text, (WIDTH // 2 - (text_width // 2)), self.time_box_y - 2, scale=2) # Time range text
 
         bar.draw()
 
 class Homework:
     def __init__(self):
-        self.data = []
-
         # Variables
+        self.data = []
         self.box_heights = []
         self.scroll_distance = 0
         self.cumulative_box_height = 0
@@ -458,12 +507,12 @@ class Homework:
     def draw(self):
         display.set_pen(GREY)
         display.clear()
-        
-        self.cumulative_box_height = 0
-        self.box_heights = []
-        unseen_hw = False
             
         if len(self.data) > 0:
+            self.cumulative_box_height = 0
+            self.box_heights = []
+            unseen_hw = False
+
             for index, l in enumerate(self.data): # loops through each homework task
                 selected = self.selected == index # True if this box is currently highlighted
 
@@ -502,7 +551,7 @@ class Homework:
                 else:
                     display.set_pen(WHITE)
 
-                display.line(0, y_box_start + box_height, WIDTH, y_box_start + box_height - 1)
+                display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1)
 
                 # Text
                 display.text(title, self.x_pad, y_text_start, wordwrap=WIDTH - 20, scale=2)
@@ -577,9 +626,8 @@ class Homework:
 
 class HomeworkViewer:
     def __init__(self):
-        self.data = {}
-
         # Variables
+        self.data = {}
         self.desc_start_offset = 0
 
         # Constants
@@ -611,13 +659,13 @@ class HomeworkViewer:
         display.set_pen(GREY)
         display.clear()
 
-        header_end = (
+        self.header_end = (
             self.content_start + self.y_top_pad
             + measure_wrapped_text(self.title, WIDTH - 20, 12, self.line_height)
             + self.title_pad + (self.line_height * 2) + self.y_bot_pad
             )
 
-        desc_start = self.desc_start_offset + header_end + self.desc_top_pad
+        desc_start = self.desc_start_offset + self.header_end + self.desc_top_pad
 
         y_text_start = self.content_start + self.y_top_pad
 
@@ -627,7 +675,7 @@ class HomeworkViewer:
 
         # Draw box over description
         display.set_pen(GREY)
-        display.rectangle(0, 0, WIDTH, header_end)
+        display.rectangle(0, 0, WIDTH, self.header_end)
 
         # Info text
         display.set_pen(WHITE)
@@ -647,7 +695,7 @@ class HomeworkViewer:
         y_text_start += 14
 
         display.set_pen(WHITE)
-        display.line(0, header_end, WIDTH, header_end) # Bottom bar
+        display.line(0, self.header_end, WIDTH, self.header_end) # Bottom bar
 
         bar.draw()
 
@@ -667,12 +715,11 @@ class HomeworkViewer:
 
 class Menu:
     def __init__(self):
-        self.entries = ["Timetable", "Behaviour", "Attendance", "Homework", "Connect and Refresh Data"]
-        
         # Variables
         self.selected = 0
 
         # Constants
+        self.entries = ["Timetable", "Behaviour", "Attendance", "Homework", "Connect and Refresh Data"]
         self.box_height = 32
         self.y_top_pad = 8
 
@@ -692,11 +739,11 @@ class Menu:
             if index == self.selected:
                 # White box to indicate selection
                 display.set_pen(WHITE)
-                display.rectangle(0, cumulative_content_height, HEIGHT, self.box_height)
+                display.rectangle(0, cumulative_content_height, WIDTH, self.box_height)
                 display.set_pen(BLACK)
             else:
                 display.set_pen(GREY)
-                display.rectangle(0, cumulative_content_height, HEIGHT, self.box_height)
+                display.rectangle(0, cumulative_content_height, WIDTH, self.box_height)
                 display.set_pen(WHITE)
 
             display.text(name, 5, cumulative_content_height + self.y_top_pad, scale=2)
@@ -728,7 +775,7 @@ class Message:
         
         print(text)
         display.set_pen(WHITE)
-        display.text(text, int((WIDTH / 2) - (text_width / 2)), (HEIGHT / 2) - 12, scale=2)
+        display.text(text, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12), wordwrap=WIDTH - 20, scale=2)
         
         display.update()
 
