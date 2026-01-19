@@ -668,30 +668,38 @@ class HomeworkViewer:
 class Menu:
     def __init__(self):
         self.entries = ["Timetable", "Behaviour", "Attendance", "Homework", "Connect and Refresh Data"]
-        self.selected = 0
         
+        # Variables
+        self.selected = 0
+
+        # Constants
+        self.box_height = 32
+        self.y_top_pad = 8
+
     def go(self):
         global page
         page = "menu"
-        display.set_pen(GREY)
-        display.clear()
+        
         self.draw()
         
     def draw(self):
+        display.set_pen(GREY)
+        display.clear()
+
         for index, name in enumerate(self.entries):
-            menu_content_height = index * 30
+            cumulative_content_height = index * 30
 
             if index == self.selected:
                 # White box to indicate selection
                 display.set_pen(WHITE)
-                display.rectangle(0, menu_content_height, 320, 32)
+                display.rectangle(0, cumulative_content_height, HEIGHT, self.box_height)
                 display.set_pen(BLACK)
             else:
                 display.set_pen(GREY)
-                display.rectangle(0, menu_content_height, 320, 32)
+                display.rectangle(0, cumulative_content_height, HEIGHT, self.box_height)
                 display.set_pen(WHITE)
 
-            display.text(name, 5, menu_content_height + 8, scale=2)
+            display.text(name, 5, cumulative_content_height + self.y_top_pad, scale=2)
     
     def scroll(self, direction):
         if direction == "up":
@@ -720,7 +728,7 @@ class Message:
         
         print(text)
         display.set_pen(WHITE)
-        display.text(text, int((320 / 2) - (text_width / 2)), 108, scale=2)
+        display.text(text, int((WIDTH / 2) - (text_width / 2)), (HEIGHT / 2) - 12, scale=2)
         
         display.update()
 
