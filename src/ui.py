@@ -412,11 +412,14 @@ class Attendence:
 class Homework:
     def __init__(self):
         self.data = []
+
+        # Variables
         self.box_heights = []
         self.scroll_distance = 0
         self.cumulative_box_height = 0
         self.selected = 0
-
+        
+        # Constants
         self.content_start = 15    # where menu bar ends
         self.y_top_pad = 5         # space between top of text and top of box
         self.y_bot_pad = 5         # space between bottom of text and bottom of box
@@ -574,74 +577,90 @@ class Homework:
 
 class HomeworkViewer:
     def __init__(self):
-        self.desc_start_offset = 0
         self.data = {}
+
+        # Variables
+        self.desc_start_offset = 0
+
+        # Constants
+        self.content_start = 15    # where menu bar ends
+        self.y_top_pad = 5         # space between top of text and top of box
+        self.y_bot_pad = 5         # space between bottom of text and bottom of box
+        self.x_pad = 5             # space between left side of screen and where text starts
+        self.line_height = 14      # height of each line at scale=2 inc. padding
+        self.title_pad = 5         # space after title to visually separate it
+        self.desc_top_pad = 5      # space between header and description
 
     def go(self, data):
         global page
         page = "homework_viewer"
+
         self.desc_start_offset = 0
-        self.data = data
+
+        self.title = data["title"]
+        self.teacher = data["teacher"]
+        self.subject = data["subject"]
+        self.due_date_str = data["due_date_str"]
+        self.late = data["late"]
+        self.description = data["description"]
+
         self.draw()
         bar.draw()
     
     def draw(self):
-        global header_end, description
         display.set_pen(GREY)
         display.clear()
 
-        title = self.data["title"]
-        teacher = self.data["teacher"]
-        subject = self.data["subject"]
-        due_date_str = self.data["due_date_str"]
-        late = self.data["late"]
-        description = self.data["description"]
-        
-        line_y = 20 # Text start
-        header_end = 10 + 33 + measure_wrapped_text(title, 300, 12, 14) + 15
+        header_end = (
+            self.content_start + self.y_top_pad
+            + measure_wrapped_text(self.title, WIDTH - 20, 12, self.line_height)
+            + self.title_pad + (self.line_height * 2) + self.y_bot_pad
+            )
 
-        desc_start = self.desc_start_offset + header_end + 5
+        desc_start = self.desc_start_offset + header_end + self.desc_top_pad
 
+        y_text_start = self.content_start + self.y_top_pad
+
+        # Draw description text
         display.set_pen(WHITE)
-        display.text(description, 5, desc_start, wordwrap=300, scale=2)
+        display.text(self.description, self.x_pad, desc_start, wordwrap=WIDTH - 20, scale=2)
 
-        # Draw header over description
+        # Draw box over description
         display.set_pen(GREY)
-        display.rectangle(0, 0, 320, header_end)
+        display.rectangle(0, 0, WIDTH, header_end)
 
-        # Text
+        # Info text
         display.set_pen(WHITE)
-        display.text(title, 5, line_y, wordwrap=300, scale=2)
-        line_y += measure_wrapped_text(title, 300, 12, 14) + 5
+        display.text(self.title, self.x_pad, y_text_start, wordwrap=WIDTH - 20, scale=2) # Title
+        y_text_start += measure_wrapped_text(self.title, WIDTH - 20, 12, self.line_height) + self.title_pad # increment line start
 
-        display.text(f"{teacher} | {subject}", 5, line_y, scale=2)
-        line_y += 14
+        display.text(f"{self.teacher} | {self.subject}", self.x_pad, y_text_start, scale=2) # Teacher and subject
+        y_text_start += 14
 
-        if late:
-            # Set text to red if task is late
+        if self.late:
+            # Set due date to red if task is late
             display.set_pen(RED)
         else:
             display.set_pen(GREEN)
 
-        display.text(f"Due on {due_date_str}", 5, line_y, scale=2)
-        line_y += 14
+        display.text(f"Due on {self.due_date_str}", self.x_pad, y_text_start, scale=2) # Due date
+        y_text_start += 14
 
         display.set_pen(WHITE)
-        
-        line_y += 5
-        display.line(0, header_end, 320, header_end) # Bottom bar
-        line_y += 10
+        display.line(0, header_end, WIDTH, header_end) # Bottom bar
 
         bar.draw()
 
     def scroll(self, direction):
-        visible_area = 240 - header_end
+        visible_area = HEIGHT - self.header_end
         if direction == "down":
-            if (measure_wrapped_text(description, 300, 12, 14) + self.desc_start_offset + 5) > visible_area:
+            if ((measure_wrapped_text(self.description, WIDTH - 20, 12, self.line_height)
+                + self.desc_start_offset + 5) > visible_area):
+                # If description has not scrolled up to far
                 self.desc_start_offset -= 14
 
         elif direction == "up":
-            if self.desc_start_offset < 0:
+            if self.desc_start_offset < 0: # If the description has been scrolled down at all
                 self.desc_start_offset += 14  
 
         self.draw()
