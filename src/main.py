@@ -206,6 +206,3 @@ except KeyboardInterrupt:
     print("Goodbye!")
     ui.cleanup()
     sys.exit()
-except Exception as e:
-    message.show(e)
-    sys.exit()

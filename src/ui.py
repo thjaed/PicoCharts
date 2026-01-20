@@ -165,6 +165,8 @@ class Timetable:
         self.line_height = 14      # height of each line at scale=2 inc. padding
         self.title_height = 18     # height of title exc. padding
         self.title_pad = 5         # space after title to visually separate it
+        self.period_number_box_width = 40
+        self.period_number_box_pad = 10
 
     def go(self):
         global page
@@ -178,12 +180,7 @@ class Timetable:
                 for l in f:
                     l = ujson.loads(l)
                     if (state.WiFi.connected and l.get("end_time_secs") > utime.time()) or (not state.WiFi.connected):
-                        self.data.append({
-                            "subject": l.get("subject"),
-                            "time": l.get("time"),
-                            "room": l.get("room"),
-                            "teacher": l.get("teacher")
-                        })
+                        self.data.append(l)
         else:
             message.show("No timetable file!", change_page=False)
             return False
@@ -204,6 +201,7 @@ class Timetable:
                 time = l["time"]
                 room = l["room"]
                 teacher = l["teacher"]
+                period_num = l["period_num"]
 
                 y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
                 y_text_start = y_box_start + self.y_top_pad
@@ -215,25 +213,43 @@ class Timetable:
 
                 # Box
                 display.set_pen(GREY)
-                display.rectangle(0, y_text_start, WIDTH, box_height)
+                display.rectangle(0, y_box_start, WIDTH, box_height)
+
+                
+
+                # Period number box
+                if period_num != None:
+                    x_pad = self.x_pad + self.period_number_box_width 
+
+                    #display.set_pen(WHITE)
+                    #display.rectangle(0, y_box_start, self.period_number_box_width, box_height)
+
+                    display.set_pen(WHITE)
+                    text_width = display.measure_text(period_num, scale=4)
+                    display.text(period_num, self.period_number_box_width // 2 - text_width // 2, y_box_start + box_height // 2 - 12, scale=4)
+                    display.line(self.period_number_box_width - 3, y_box_start, self.period_number_box_width - 3, y_box_start + box_height, 3)
+                    
+                    #display.line(0, y_box_start + box_height - 1, self.period_number_box_width, y_box_start + box_height - 1, 3)
+                else:
+                    x_pad = self.x_pad
 
                 # Bottom bar
                 display.set_pen(WHITE)
-                display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1)
+                display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1, 3)
 
                 # Text
                 display.set_pen(WHITE)
 
-                display.text(subject, self.x_pad, y_text_start, scale=3)
+                display.text(subject, x_pad, y_text_start, scale=3)
                 y_text_start += 20 # increment line start
 
-                display.text(time, self.x_pad, y_text_start, scale=2)
+                display.text(time, x_pad, y_text_start, scale=2)
                 y_text_start += 14
 
-                display.text(room, self.x_pad, y_text_start, scale=2)
+                display.text(room, x_pad, y_text_start, scale=2)
                 y_text_start += 14
 
-                display.text(teacher, self.x_pad, y_text_start, scale=2)
+                display.text(teacher, x_pad, y_text_start, scale=2)
                 y_text_start += 14
 
                 self.cumulative_box_height += box_height

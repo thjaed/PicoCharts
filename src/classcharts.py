@@ -90,6 +90,10 @@ class ClassCharts:
             subject = lesson["subject_name"]
             teacher = lesson["teacher_name"]
             room = lesson["room_name"]
+
+            if not period_code.isdigit():
+                # Don't add a period code if it is not a number, e.g. REG or RB2
+                period_code = None
             
             # Word Replacements
             if subject == "Art & Design - Photography":
@@ -101,7 +105,8 @@ class ClassCharts:
                 "teacher": teacher,
                 "room": room,
                 "time": f"{start_time} to {end_time}",
-                "end_time_secs": clock.clock_str_to_secs(end_time)
+                "end_time_secs": clock.clock_str_to_secs(end_time),
+                "period_num": period_code
             }
             timetable.append(event)
         
