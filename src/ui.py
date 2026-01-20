@@ -179,7 +179,7 @@ class Timetable:
             with open("timetable.jsonl", "r") as f:
                 for l in f:
                     l = ujson.loads(l)
-                    if (state.WiFi.connected and l.get("end_time_secs") > utime.time()) or (not state.WiFi.connected):
+                    if (state.WiFi.connected and l.get("end") > utime.time()) or (not state.WiFi.connected):
                         self.data.append(l)
         else:
             message.show("No timetable file!", change_page=False)
@@ -196,59 +196,87 @@ class Timetable:
             self.cumulative_box_height = 0
             self.box_heights = []
 
-            for l in self.data: # loops through each lesson
-                subject = l["subject"]
-                time = l["time"]
-                room = l["room"]
-                teacher = l["teacher"]
-                period_num = l["period_num"]
-
+            for e in self.data: # loops through each event
                 y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
                 y_text_start = y_box_start + self.y_top_pad
+                 
+                if e["type"] == "lesson":
+                    subject = e["subject"]
+                    time = e["time"]
+                    room = e["room"]
+                    teacher = e["teacher"]
+                    period_num = e["period_num"]
 
-                box_height = self.y_top_pad + (self.title_height + self.title_pad) + (self.line_height * 3) + self.y_bot_pad
+                    box_height = self.y_top_pad + (self.title_height + self.title_pad) + (self.line_height * 3) + self.y_bot_pad
 
-                # used for scrolling
-                self.box_heights.append(box_height)
+                    # used for scrolling
+                    self.box_heights.append(box_height)
 
-                # Box
-                display.set_pen(GREY)
-                display.rectangle(0, y_box_start, WIDTH, box_height)
+                    # Box
+                    display.set_pen(GREY)
+                    display.rectangle(0, y_box_start, WIDTH, box_height)
 
-                # Period number box
-                if period_num != None:
-                    # Increase X Padding for text
-                    x_pad = self.x_pad + self.period_number_box_width
+                    # Period number box
+                    if period_num != None:
+                        # Increase X Padding for text
+                        x_pad = self.x_pad + self.period_number_box_width
 
+                        display.set_pen(WHITE)
+
+                        # Number
+                        text_width = display.measure_text(period_num, scale=4)
+                        display.text(period_num, self.period_number_box_width // 2 - text_width // 2, y_box_start + box_height // 2 - 12, scale=4)
+
+                        # Dividing line
+                        display.line(self.period_number_box_width - 3, y_box_start, self.period_number_box_width - 3, y_box_start + box_height, 3)
+                    else:
+                        x_pad = self.x_pad
+
+                    # Bottom bar
+                    display.set_pen(WHITE)
+                    display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1, 3)
+
+                    # Text
                     display.set_pen(WHITE)
 
-                    # Number
-                    text_width = display.measure_text(period_num, scale=4)
-                    display.text(period_num, self.period_number_box_width // 2 - text_width // 2, y_box_start + box_height // 2 - 12, scale=4)
+                    display.text(subject, x_pad, y_text_start, scale=3)
+                    y_text_start += 20 # increment line start
 
-                    # Dividing line
-                    display.line(self.period_number_box_width - 3, y_box_start, self.period_number_box_width - 3, y_box_start + box_height, 3)
-                else:
-                    x_pad = self.x_pad
+                    display.text(time, x_pad, y_text_start, scale=2)
+                    y_text_start += 14
+
+                    display.text(room, x_pad, y_text_start, scale=2)
+                    y_text_start += 14
+
+                    display.text(teacher, x_pad, y_text_start, scale=2)
+                    y_text_start += 14
+                elif e["type"] == "break":
+                    time = e["time"]
+                    name = e["name"]
+
+                    box_height = self.y_top_pad + (self.line_height * 2) + self.y_bot_pad
+
+                    # used for scrolling
+                    self.box_heights.append(box_height)
+
+                    # Box
+                    display.set_pen(GREY)
+                    display.rectangle(0, y_box_start, WIDTH, box_height)
+
+                    # Text
+                    display.set_pen(WHITE)
+
+                    text_width = display.measure_text(name, scale=2)
+                    display.text(name, WIDTH // 2 - text_width // 2, y_text_start, scale=2)
+                    y_text_start += 14 # increment line start
+
+                    text_width = display.measure_text(time, scale=2)
+                    display.text(time, WIDTH // 2 - text_width // 2, y_text_start, scale=2)
+                    y_text_start += 14
 
                 # Bottom bar
-                display.set_pen(WHITE)
-                display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1, 3)
-
-                # Text
-                display.set_pen(WHITE)
-
-                display.text(subject, x_pad, y_text_start, scale=3)
-                y_text_start += 20 # increment line start
-
-                display.text(time, x_pad, y_text_start, scale=2)
-                y_text_start += 14
-
-                display.text(room, x_pad, y_text_start, scale=2)
-                y_text_start += 14
-
-                display.text(teacher, x_pad, y_text_start, scale=2)
-                y_text_start += 14
+                    display.set_pen(WHITE)
+                    display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1, 3)
 
                 self.cumulative_box_height += box_height
                         

@@ -4,6 +4,7 @@ import utime # type: ignore
 from uclasscharts_api import StudentClient
 import clock
 import secrets
+import config
 
 def strip_tags(text):
     # removes HTML tags from a string
@@ -96,26 +97,42 @@ class ClassCharts:
                 period_code = None
             
             # Word Replacements
-            if subject == "Art & Design - Photography":
-                subject = "Photography"
+            if subject == "Art & Design - Photography": subject = "Photography"
                 
             # Put data in json format so it can be saved to a file
-            event = {
+            timetable.append({
                 "subject": subject,
                 "teacher": teacher,
                 "room": room,
                 "time": f"{start_time} to {end_time}",
-                "end_time_secs": clock.clock_str_to_secs(end_time),
-                "period_num": period_code
-            }
-            timetable.append(event)
-        
+                "start": clock.clock_str_to_secs(start_time),
+                "end": clock.clock_str_to_secs(end_time),
+                "period_num": period_code,
+                "type": "lesson"
+            })
+    
+        for b in config.BREAKS:
+            start = b["start"]
+            end = b["end"]
+            
+            timetable.append(
+                {
+                    "name": b["name"],
+                    "time": f"{start} to {end}",
+                    "start": clock.clock_str_to_secs(start),
+                    "end": clock.clock_str_to_secs(end),
+                    "type": "break"
+                }
+            )
+
+        # Sorts timetable by start time
+        timetable = sorted(timetable, key=lambda x: x["start"]) # I am so proud of this one-liner lol
+
         # Write data to file
         with open("timetable.jsonl", "w") as f:
             for event in timetable:
                 ujson.dump(event, f)
                 f.write("\n")
-        
         
     def save_behaviour(self, login=True):
         if login: self.login()
