@@ -215,21 +215,19 @@ class Timetable:
                 display.set_pen(GREY)
                 display.rectangle(0, y_box_start, WIDTH, box_height)
 
-                
-
                 # Period number box
                 if period_num != None:
-                    x_pad = self.x_pad + self.period_number_box_width 
-
-                    #display.set_pen(WHITE)
-                    #display.rectangle(0, y_box_start, self.period_number_box_width, box_height)
+                    # Increase X Padding for text
+                    x_pad = self.x_pad + self.period_number_box_width
 
                     display.set_pen(WHITE)
+
+                    # Number
                     text_width = display.measure_text(period_num, scale=4)
                     display.text(period_num, self.period_number_box_width // 2 - text_width // 2, y_box_start + box_height // 2 - 12, scale=4)
+
+                    # Dividing line
                     display.line(self.period_number_box_width - 3, y_box_start, self.period_number_box_width - 3, y_box_start + box_height, 3)
-                    
-                    #display.line(0, y_box_start + box_height - 1, self.period_number_box_width, y_box_start + box_height - 1, 3)
                 else:
                     x_pad = self.x_pad
 
