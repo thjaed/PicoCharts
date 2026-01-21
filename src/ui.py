@@ -517,6 +517,7 @@ class Homework:
         self.x_pad = 5             # space between left side of screen and where text starts
         self.line_height = 14      # height of each line at scale=2 inc. padding
         self.title_pad = 5         # space after title to visually separate it
+        self.status_marker_width = 10
         
     def go(self):
         global page
@@ -528,18 +529,7 @@ class Homework:
                 for l in f:
                     # Load data from file into self.data
                     l = ujson.loads(l)
-
-                    self.data.append({
-                        "title": l.get("title"),
-                        "teacher": l.get("teacher"),
-                        "subject": l.get("subject"),
-                        "due_date_str": l.get("due_date_str"),
-                        "issue_date_str": l.get("issue_date_str"),
-                        "seen": l.get("seen"),
-                        "completed": l.get("completed"),
-                        "late": l.get("late"),
-                        "description": l.get("description")
-                    })
+                    self.data.append(l)
         else:
             message.show("No homework file!", change_page=False)
             return False # dont continue to draw
@@ -553,7 +543,6 @@ class Homework:
         if len(self.data) > 0:
             self.cumulative_box_height = 0
             self.box_heights = []
-            unseen_hw = False
 
             for index, l in enumerate(self.data): # loops through each homework task
                 selected = self.selected == index # True if this box is currently highlighted
@@ -564,10 +553,7 @@ class Homework:
                 due_date_str = l["due_date_str"]
                 late = l["late"]
                 completed = l["completed"]
-
-                if l["seen"] == False:
-                    # there is unseen homework if this task has not been seen
-                    unseen_hw = True
+                seen = l["seen"]
 
                 y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
                 y_text_start = y_box_start + self.y_top_pad
@@ -586,6 +572,18 @@ class Homework:
                     display.set_pen(GREY)
                 display.rectangle(0, y_box_start, WIDTH, box_height)
 
+                x_pad = self.x_pad
+
+                if not seen:
+                    x_pad += self.status_marker_width
+                    display.set_pen(BLUE)
+                    display.rectangle(0, y_box_start, self.status_marker_width, box_height)
+                
+                if completed:
+                    x_pad += self.status_marker_width
+                    display.set_pen(GREEN)
+                    display.rectangle(0, y_box_start, self.status_marker_width, box_height)
+
                 # Bottom Bar
                 if selected:
                     # text white if highlighted
@@ -596,10 +594,10 @@ class Homework:
                 display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1)
 
                 # Text
-                display.text(title, self.x_pad, y_text_start, wordwrap=WIDTH - 20, scale=2)
+                display.text(title, x_pad, y_text_start, wordwrap=WIDTH - 20, scale=2)
                 y_text_start += measure_wrapped_text(title, WIDTH - 20, 12, 14) + self.title_pad # increment line start
 
-                display.text(f"{teacher} | {subject}", self.x_pad, y_text_start, scale=2)
+                display.text(f"{teacher} | {subject}", x_pad, y_text_start, scale=2)
                 y_text_start += self.line_height
 
                 if late:
@@ -607,13 +605,10 @@ class Homework:
                     display.set_pen(RED)
                 else:
                     display.set_pen(GREEN)
-                display.text(f"Due on {due_date_str}", self.x_pad, y_text_start, scale=2)
+                display.text(f"Due on {due_date_str}", x_pad, y_text_start, scale=2)
                 y_text_start += self.line_height
 
                 self.cumulative_box_height += box_height
-
-            if unseen_hw:
-                led.off()
         else:
             message.show("All homework completed!", change_page=False)
         
