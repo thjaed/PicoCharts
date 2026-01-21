@@ -1,6 +1,8 @@
 import asyncio
 import utime # type: ignore
 import sys
+import os
+import ujson # type: ignore
 
 from pybuttons import Button
 from classcharts import ClassCharts
@@ -142,7 +144,28 @@ async def homework_checker():
             unseen_tasks = classcharts.save_homework()
             if unseen_tasks:
                 led.notify()
+            else:
+                led.off()
         await asyncio.sleep(120)
+
+async def timetable_updater():
+    # Periodically checks for today's timetable and gets a new one if needed
+    while True:
+        wifi.test_connection()
+        if state.WiFi.connected and "timetable.jsonl" in os.listdir():
+            dates = []
+            with open("timetable.jsonl", "r") as f:
+                load = lambda x: ujson.loads(x)
+                # get dates from lessons in timtetable.jsonl
+                dates = [load(l).get("date") for l in f if load(l).get("type") == "lesson"]
+
+            if clock.today() not in dates:
+                # save timetable if it is outdated
+                classcharts.save_timetable()
+                if ui.page == "timetable":
+                    timetable.go()
+
+        await asyncio.sleep(10)
 
 async def connection_tester():
     # Periodically check for wifi connectivity
@@ -165,8 +188,9 @@ def init():
     # Starts functions that need to be run asyncrously
     asyncio.create_task(update_menu_bar())
     asyncio.create_task(monitor_buttons())
-    asyncio.create_task(homework_checker())
     asyncio.create_task(connection_tester())
+    asyncio.create_task(homework_checker())
+    asyncio.create_task(timetable_updater())
     
     # Draw UI
     timetable.go()

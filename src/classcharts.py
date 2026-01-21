@@ -74,7 +74,8 @@ class ClassCharts:
     def save_timetable(self, login=True):
         if login: self.login()
         # Query API
-        response = self.client.get_lessons(date=clock.today())
+        date = clock.today()
+        response = self.client.get_lessons(date=date)
         lessons = response["data"]
         meta = response["meta"]
         
@@ -108,7 +109,8 @@ class ClassCharts:
                 "start": clock.clock_str_to_secs(start_time),
                 "end": clock.clock_str_to_secs(end_time),
                 "period_num": period_code,
-                "type": "lesson"
+                "type": "lesson",
+                "date": date
             })
     
         for b in config.BREAKS:
