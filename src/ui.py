@@ -529,7 +529,8 @@ class Homework:
                 for l in f:
                     # Load data from file into self.data
                     l = ujson.loads(l)
-                    self.data.append(l)
+                    if not l["completed"]:
+                        self.data.append(l)
         else:
             message.show("No homework file!", change_page=False)
             return False # dont continue to draw
@@ -579,10 +580,10 @@ class Homework:
                     display.set_pen(BLUE)
                     display.rectangle(0, y_box_start, self.status_marker_width, box_height)
                 
-                if completed:
-                    x_pad += self.status_marker_width
-                    display.set_pen(GREEN)
-                    display.rectangle(0, y_box_start, self.status_marker_width, box_height)
+                #if completed:
+                #    x_pad += self.status_marker_width
+                #    display.set_pen(GREEN)
+                #    display.rectangle(0, y_box_start, self.status_marker_width, box_height)
 
                 # Bottom Bar
                 if selected:
