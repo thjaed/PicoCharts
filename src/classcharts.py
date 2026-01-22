@@ -5,6 +5,7 @@ from uclasscharts_api import StudentClient
 import clock
 import secrets
 import config
+import state
 
 def strip_tags(text):
     # removes HTML tags from a string
@@ -220,8 +221,7 @@ class ClassCharts:
         data = response["data"]
 
         homeworks = []
-
-        unseen_tasks = False
+        state.Homework.unseen_ids = []
 
         for task in data:
             title = task["title"]
@@ -230,24 +230,15 @@ class ClassCharts:
             due_date = task["due_date"]
             issue_date = task["issue_date"]
             description = convert_text(task["description"])
+            task_id = task["id"]
         
-            if task["status"]["first_seen_date"] != None:
-                seen = True
-            else:
-                seen = False
-                unseen_tasks = True
+            if task["status"]["first_seen_date"] == None:
+                state.Homework.unseen_ids.append(task_id)
 
-            if task["status"]["ticked"] == "yes":
-                completed = True
-            else:
-                completed = False
-            
+            completed = task["status"]["ticked"] == "yes"
+
             due_date_secs = clock.date_to_secs(due_date)
-
-            if due_date_secs < utime.time():
-                late = True
-            else:
-                late = False
+            late = due_date_secs < utime.time()
 
             due_date_str = clock.get_date(due_date_secs)
             issue_date_str = clock.get_date(clock.date_to_secs(issue_date))
@@ -258,15 +249,18 @@ class ClassCharts:
                 "subject": subject,
                 "due_date_str": due_date_str,
                 "issue_date_str": issue_date_str,
-                "seen": seen,
                 "completed": completed,
                 "late": late,
-                "description": description
+                "description": description,
+                "task_id": task_id
             })
 
         with open("homework.jsonl", "w") as f:
             for line in homeworks:
                 ujson.dump(line, f)
                 f.write("\n")
-        
-        return unseen_tasks
+    
+    def mark_seen(self, id):
+        self.login()
+        self.client.mark_homework_as_seen(id)
+        state.Homework.unseen_ids.remove(id)

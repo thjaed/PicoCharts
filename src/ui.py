@@ -9,6 +9,7 @@ import config
 import clock
 import state
 from classcharts import ClassCharts
+import wifi
 
 display = PicoGraphics(display=DISPLAY_PICO_DISPLAY_2, pen_type=PEN_P4)
 brightness = config.BRIGHTNESS
@@ -553,8 +554,8 @@ class Homework:
                 subject = l["subject"]
                 due_date_str = l["due_date_str"]
                 late = l["late"]
-                completed = l["completed"]
-                seen = l["seen"]
+                task_id = l["task_id"]
+                seen = task_id not in state.Homework.unseen_ids
 
                 y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
                 y_text_start = y_box_start + self.y_top_pad
@@ -616,8 +617,20 @@ class Homework:
         bar.draw() # Draw menu bar on top
     
     def select(self):
-            # give assocaited task data to hwviewer
-            hwviewer.go(self.data[self.selected])
+            task = self.data[self.selected]
+            task_id = task["task_id"]
+
+            hwviewer.go(task)
+
+            if task_id in state.Homework.unseen_ids:
+                wifi.test_connection()
+                if state.WiFi.connected:
+                    # mark task as seen on classcharts if it is unseen
+                    classcharts.mark_seen(task_id)
+
+                if len(state.Homework.unseen_ids) == 0:
+                    # turn led off if there are no other unseen tasks
+                    led.off()
     
     def scroll(self, direction):
         # BASED ON VIBECODED FUNCTION #

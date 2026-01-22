@@ -141,8 +141,8 @@ async def homework_checker():
     while True:
         wifi.test_connection()
         if state.WiFi.connected:
-            unseen_tasks = classcharts.save_homework()
-            if unseen_tasks:
+            classcharts.save_homework()
+            if len(state.Homework.unseen_ids) > 0:
                 led.notify()
             else:
                 led.off()

@@ -33,6 +33,7 @@
  - Front LED turns on if there is unseen homework
  - Description can be viewed by clicking on homework task
  - Due-date colour coded to make it clear if a homework is late or not
+ - Homework marked as seen on ClassCharts when it is clicked on
 
 ## Use of AI generated code
 

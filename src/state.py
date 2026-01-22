@@ -3,3 +3,5 @@ class WiFi:
 class UI:
     sleeping = False
     last_interaction_time = 0
+class Homework:
+    unseen_ids = []
