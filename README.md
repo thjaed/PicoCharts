@@ -48,3 +48,5 @@
  - pybuttons by @oscaracena - https://github.com/oscaracena/pybuttons
  - ClassCharts API Docs  by @veloii - https://github.com/classchartsapi/api-docs
  - PicoGraphics by @pimoroni - https://github.com/pimoroni/pimoroni-pico/tree/main/micropython/modules/picographics
+ - MicroPython_LC709203F by @chris-reichl - https://github.com/chris-reichl/MicroPython_LC709203F
+ - I based my 3D printed case on: Pimoroni Pico Display pack 2.0 Case by @PMcGregor_848641 - https://www.printables.com/model/473270-pimoroni-pico-display-pack-20-case

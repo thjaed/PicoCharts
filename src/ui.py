@@ -4,7 +4,7 @@ import ujson # type: ignore
 import os
 import utime # type: ignore
 
-#import battery
+import battery
 import config
 import clock
 import state
@@ -137,18 +137,17 @@ class MenuBar:
             display.text(time, 0, 0, scale=2) # Clock
             display.text(date, int((clock_width + (290 - clock_width) / 2) - (date_width / 2)), 0, scale=2) # Date
 
-        # Battery Icon
-        #battery_level = battery.percentage()
-        #display.set_pen(WHITE)
-        #display.rectangle(290, 2, 25, 10) # White border
-        #display.rectangle(315, 4, 2, 6) # Notch
-        #display.set_pen(GREY)
-        #display.rectangle(292, 4, 21, 6) # Grey background
+        #Battery Icon
+        battery_level = battery.percentage()
+        display.set_pen(WHITE)
+        display.rectangle(290, 2, 25, 10) # White border
+        display.rectangle(315, 4, 2, 6) # Notch
+        display.set_pen(GREY)
+        display.rectangle(292, 4, 21, 6) # Grey background
+        display.set_pen(WHITE)
         #if battery.charging():
-        #    display.set_pen(GREEN) # Battery icon green if charging
-        #else:
-        #    display.set_pen(WHITE)
-        #display.rectangle(293, 5, (round((battery_level / 100) * 19)), 4) # Charge level
+        #    display.set_pen(GREEN) # Battery icon green if charging 
+        display.rectangle(293, 5, (round((battery_level / 100) * 19)), 4) # Charge level
 
 class Timetable:
     def __init__(self):
