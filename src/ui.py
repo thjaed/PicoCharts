@@ -124,8 +124,8 @@ class MenuBar:
             # Draw offline indicator instead of date and time
             display.set_pen(RED)
 
-            text_width = display.measure_text("OFFLINE: DATA OUT OF DATE", scale=2)
-            display.text("OFFLINE: DATA OUT OF DATE", 160 - text_width // 2, 0, scale=2)
+            text_width = display.measure_text("OFFLINE", scale=2)
+            display.text("OFFLINE", 160 - text_width // 2, 0, scale=2)
         else:
             time = clock.get_clock()
             date = clock.get_date()

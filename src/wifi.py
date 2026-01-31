@@ -6,7 +6,7 @@ import secrets
 import state
 import config
 
-WIFI_TIMEOUT = 10
+WIFI_TIMEOUT = 15
 
 def test_connection():
     if not config.FORCE_OFFLINE:
