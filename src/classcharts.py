@@ -237,7 +237,9 @@ class ClassCharts:
                 state.Homework.unseen_ids.append(task_id)
 
             completed = task["status"]["ticked"] == "yes"
-
+            
+            title = title.replace("&amp;amp;amp;", "&") # patch API bug
+            
             due_date_secs = clock.date_to_secs(due_date)
             late = due_date_secs < utime.time()
 

@@ -155,7 +155,7 @@ async def update_data():
             else:
                 led.off()
         
-        await asyncio.sleep(30)
+        await asyncio.sleep(1200)
 
 async def connection_tester():
     # Periodically check for wifi connectivity
