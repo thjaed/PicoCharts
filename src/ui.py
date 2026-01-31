@@ -138,16 +138,17 @@ class MenuBar:
             display.text(date, int((clock_width + (290 - clock_width) / 2) - (date_width / 2)), 0, scale=2) # Date
 
         #Battery Icon
-        battery_level = battery.percentage()
-        display.set_pen(WHITE)
-        display.rectangle(290, 2, 25, 10) # White border
-        display.rectangle(315, 4, 2, 6) # Notch
-        display.set_pen(GREY)
-        display.rectangle(292, 4, 21, 6) # Grey background
-        display.set_pen(WHITE)
-        #if battery.charging():
-        #    display.set_pen(GREEN) # Battery icon green if charging 
-        display.rectangle(293, 5, (round((battery_level / 100) * 19)), 4) # Charge level
+        if state.Battery.connected:
+            battery_level = battery.percentage()
+            display.set_pen(WHITE)
+            display.rectangle(290, 2, 25, 10) # White border
+            display.rectangle(315, 4, 2, 6) # Notch
+            display.set_pen(GREY)
+            display.rectangle(292, 4, 21, 6) # Grey background
+            display.set_pen(WHITE)
+            #if battery.charging():
+            #    display.set_pen(GREEN) # Battery icon green if charging 
+            display.rectangle(293, 5, (round((battery_level / 100) * 19)), 4) # Charge level
 
 class Timetable:
     def __init__(self):
@@ -182,7 +183,7 @@ class Timetable:
                     if (state.WiFi.connected and l.get("end") > utime.time()) or (not state.WiFi.connected):
                         self.data.append(l)
         else:
-            message.show("No timetable file!", change_page=False)
+            message.show("No timetable file!")
             return False
                 
         self.draw()
@@ -281,7 +282,7 @@ class Timetable:
                 self.cumulative_box_height += box_height
                         
         else:
-            message.show("No more lessons today!", change_page=False)
+            message.show("No more lessons today!")
             
         bar.draw() # Draw menu bar on top
     
@@ -350,7 +351,7 @@ class Behaviour:
                         "negative": l.get("negative")
                     })
         else:
-            message.show("No behaviour file!", change_page=False)
+            message.show("No behaviour file!")
             return False
         
         self.draw()
@@ -443,7 +444,7 @@ class Attendence:
                         "percentage": l.get("percentage")
                     })
         else:
-            message.show("No attendance file!", change_page=False)
+            message.show("No attendance file!")
             return False
         
         self.draw()
@@ -532,7 +533,7 @@ class Homework:
                     if not l["completed"]:
                         self.data.append(l)
         else:
-            message.show("No homework file!", change_page=False)
+            message.show("No homework file!")
             return False # dont continue to draw
         
         self.draw()
@@ -611,7 +612,7 @@ class Homework:
 
                 self.cumulative_box_height += box_height
         else:
-            message.show("All homework completed!", change_page=False)
+            message.show("All homework completed!")
         
         bar.draw() # Draw menu bar on top
     
@@ -813,9 +814,8 @@ class Message:
     def __init__(self):
         self.text = ""
 
-    def show(self, text, change_page=True):
+    def show(self, text):
         global page
-        if change_page: page = "message"
         
         display.set_pen(GREY)
         display.clear()

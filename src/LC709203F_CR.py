@@ -284,15 +284,40 @@ class LC709203F:
         return crc
 
     def _read_word(self, regAddress):
-        data = int.from_bytes(self.i2c_device.readfrom_mem(LC709203F_I2CADDR_DEFAULT, regAddress, 2), 'little') & 0xFFFF
-        return data   
+        # Use the instance address (may differ from the default) and retry on transient errors
+        attempts = 3
+        for _ in range(attempts):
+            try:
+                raw = self.i2c_device.readfrom_mem(self.addr, regAddress, 2)
+                data = int.from_bytes(raw, 'little') & 0xFFFF
+                return data
+            except OSError:
+                sleep(0.05)
+                continue
+        # if we get here, re-raise the last error for the caller to handle
+        return None
         
     def _write_word(self, command, data):
-        self._buf[0] = LC709203F_I2CADDR_DEFAULT * 2  # write byte
+        # first byte for CRC is the 8-bit write address (7-bit addr << 1)
+        self._buf[0] = (self.addr << 1) & 0xFF
         self._buf[1] = command  # command / register
         self._buf[2] = data & 0xFF
         self._buf[3] = (data >> 8) & 0xFF
         self._buf[4] = self._generate_crc(self._buf[0:4])
-        self.i2c_device.writeto(LC709203F_I2CADDR_DEFAULT, self._buf[1:5])
+        # Write the register, data (LSB, MSB) and CRC to the device. Retry transient errors.
+        attempts = 5
+        for _ in range(attempts):
+            try:
+                self.i2c_device.writeto(self.addr, self._buf[1:5])
+                return True
+            except OSError:
+                sleep(0.1)
+                continue
+        # If write repeatedly fails, log and return None so caller can handle it
+        try:
+            print("I2C write failed to device at address {}".format(self.addr))
+        except Exception:
+            pass
+        return None
         
 

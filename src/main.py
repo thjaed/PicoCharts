@@ -11,6 +11,7 @@ import clock
 import wifi
 import config
 import state
+import battery
 
 classcharts = ClassCharts()
 message = ui.message
@@ -29,6 +30,7 @@ display_update_time = int((1/fps) * 1000) # Calculates time to sleep in ms
 ui.setup()
 
 def press_handler(btn, pattern):
+    print("button pressed")
     state.UI.last_interaction_time = utime.time()
     if state.UI.sleeping:
         device_wake_up()
@@ -176,7 +178,8 @@ async def connection_tester():
 def init():
     # Startup sequence
     bootscreen.draw()
-    bootscreen.print("Starting")
+    bootscreen.print("Initialising Battery")
+    battery.init()
     for text in wifi.wifi_connect():
         bootscreen.print(text)
     if state.WiFi.connected:
@@ -186,18 +189,18 @@ def init():
             bootscreen.print(text)
     
     # Starts functions that need to be run asyncrously
-    asyncio.create_task(update_menu_bar())
     asyncio.create_task(monitor_buttons())
+    asyncio.create_task(update_menu_bar())
     asyncio.create_task(connection_tester())
     asyncio.create_task(homework_checker())
     asyncio.create_task(timetable_updater())
-    
-    # Draw UI
-    timetable.go()
 
     # Start monitoring time to sleep
     state.UI.last_interaction_time = utime.time()
     asyncio.create_task(sleep_handler())
+    
+    # Draw UI
+    timetable.go()
 
     print("Finished startup")
 

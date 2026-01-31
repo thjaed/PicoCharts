@@ -5,3 +5,5 @@ class UI:
     last_interaction_time = 0
 class Homework:
     unseen_ids = []
+class Battery:
+    connected = False
