@@ -113,20 +113,21 @@ class ClassCharts:
                 "type": "lesson",
                 "date": date
             })
-    
-        for b in config.BREAKS:
-            start = b["start"]
-            end = b["end"]
+
+        if len(timetable) > 0:
+            for b in config.BREAKS:
+                start = b["start"]
+                end = b["end"]
             
-            timetable.append(
-                {
-                    "name": b["name"],
-                    "time": f"{start} to {end}",
-                    "start": clock.clock_str_to_secs(start),
-                    "end": clock.clock_str_to_secs(end),
-                    "type": "break"
-                }
-            )
+                timetable.append(
+                    {
+                        "name": b["name"],
+                        "time": f"{start} to {end}",
+                        "start": clock.clock_str_to_secs(start),
+                        "end": clock.clock_str_to_secs(end),
+                        "type": "break"
+                    }
+                )
 
         # Sorts timetable by start time
         timetable = sorted(timetable, key=lambda x: x["start"]) # I am so proud of this one-liner lol

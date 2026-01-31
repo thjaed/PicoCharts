@@ -30,7 +30,6 @@ display_update_time = int((1/fps) * 1000) # Calculates time to sleep in ms
 ui.setup()
 
 def press_handler(btn, pattern):
-    print("button pressed")
     state.UI.last_interaction_time = utime.time()
     if state.UI.sleeping:
         device_wake_up()
@@ -138,36 +137,25 @@ async def sleep_handler():
             device_to_sleep()
         await asyncio.sleep_ms(display_update_time)
 
-async def homework_checker():
-    # Periodically gets homework and checks for new tasks
+async def update_data():
+    await asyncio.sleep(10)
+    print("running now")
+    # Periodically updates data
     while True:
         wifi.test_connection()
-        if state.WiFi.connected:
-            classcharts.save_homework()
+        if state.WiFi.connected and state.UI.sleeping:
+            led.updating()
+            for text in classcharts.save_data():
+                print(text)
+            led.off()
+
+            # Turn LED on if there are unseen hw tasks
             if len(state.Homework.unseen_ids) > 0:
                 led.notify()
             else:
                 led.off()
-        await asyncio.sleep(120)
-
-async def timetable_updater():
-    # Periodically checks for today's timetable and gets a new one if needed
-    while True:
-        wifi.test_connection()
-        if state.WiFi.connected and "timetable.jsonl" in os.listdir():
-            dates = []
-            with open("timetable.jsonl", "r") as f:
-                load = lambda x: ujson.loads(x)
-                # get dates from lessons in timtetable.jsonl
-                dates = [load(l).get("date") for l in f if load(l).get("type") == "lesson"]
-
-            if clock.today() not in dates:
-                # save timetable if it is outdated
-                classcharts.save_timetable()
-                if ui.page == "timetable":
-                    timetable.go()
-
-        await asyncio.sleep(10)
+        
+        await asyncio.sleep(30)
 
 async def connection_tester():
     # Periodically check for wifi connectivity
@@ -192,8 +180,7 @@ def init():
     asyncio.create_task(monitor_buttons())
     asyncio.create_task(update_menu_bar())
     asyncio.create_task(connection_tester())
-    asyncio.create_task(homework_checker())
-    asyncio.create_task(timetable_updater())
+    asyncio.create_task(update_data())
 
     # Start monitoring time to sleep
     state.UI.last_interaction_time = utime.time()

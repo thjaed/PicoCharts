@@ -78,7 +78,10 @@ class LED:
         self.led.set_rgb(0, 0, 0)
     
     def notify(self):
-        self.led.set_rgb(0, 0, 10) # dim blue
+        self.led.set_rgb(0, 0, 1) # dim blue
+    
+    def updating(self):
+        self.led.set_rgb(1, 0, 0) # dim red
 
 class BootScreen:
     def draw(self):
