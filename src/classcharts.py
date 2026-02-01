@@ -72,10 +72,11 @@ class ClassCharts:
 
         yield "All data saved"
 
-    def save_timetable(self, login=True):
+    def save_timetable(self, date=None, file_name="timetable.jsonl", login=True):
         if login: self.login()
         # Query API
-        date = clock.today()
+        if date is None:
+            date = clock.secs_to_date()
         response = self.client.get_lessons(date=date)
         lessons = response["data"]
         meta = response["meta"]
@@ -133,7 +134,7 @@ class ClassCharts:
         timetable = sorted(timetable, key=lambda x: x["start"]) # I am so proud of this one-liner lol
 
         # Write data to file
-        with open("timetable.jsonl", "w") as f:
+        with open(file_name, "w") as f:
             for event in timetable:
                 ujson.dump(event, f)
                 f.write("\n")
@@ -147,9 +148,9 @@ class ClassCharts:
         # Query API
         for time in times:
             if time == "august":
-                response = self.client.get_behaviour(from_date=clock.august(), to_date=clock.today())
+                response = self.client.get_behaviour(from_date=clock.august(), to_date=clock.secs_to_date())
             elif time == "this_week":
-                response = self.client.get_behaviour(from_date=clock.this_monday(), to_date=clock.today())
+                response = self.client.get_behaviour(from_date=clock.this_monday(), to_date=clock.secs_to_date())
             elif time == "last_week":
                 last_week = clock.last_week()
                 response = self.client.get_behaviour(from_date=last_week[0], to_date=last_week[1])
@@ -189,7 +190,7 @@ class ClassCharts:
         # Query API
         for time in times:
             if time == "this_week":
-                response = self.client.get_attendance(from_date=clock.this_monday(), to_date=clock.today())
+                response = self.client.get_attendance(from_date=clock.this_monday(), to_date=clock.secs_to_date())
                 since_august = response["meta"]["percentage_singe_august"]
             elif time == "last_week":
                 last_week = clock.last_week()

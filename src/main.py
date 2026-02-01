@@ -18,8 +18,9 @@ message = ui.message
 bar = ui.bar
 led = ui.led
 hwviewer = ui.hwviewer
+timetable = ui.timetable
 menu = ui.Menu()
-timetable = ui.Timetable()
+timetable_change_date = ui.timetable_chage_date
 behaviour = ui.Behaviour()
 attendance = ui.Attendence()
 homework = ui.Homework()
@@ -46,11 +47,17 @@ def press_handler(btn, pattern):
                     attendance.draw()
                 elif ui.page == "homework":
                     homework.select()
+                elif ui.page == "timetable":
+                    timetable_change_date.go()
+                elif ui.page == "timetable_change_date":
+                    timetable_change_date.select()
 
             if btn.get_id() == BUTTON_B:
                 if ui.page == "homework_viewer":
                     homework.go()
                 elif ui.page == "menu": # Go to timetable page
+                    timetable.go()
+                elif ui.page == "timetable_change_date":
                     timetable.go()
                 elif ui.page != "menu": # Go to menu page
                     menu.go()
@@ -64,6 +71,8 @@ def press_handler(btn, pattern):
                     hwviewer.scroll(direction="up")
                 elif ui.page == "menu": # Highlight the button above
                     menu.scroll(direction="up")
+                elif ui.page == "timetable_change_date":
+                    timetable_change_date.change_date(direction="forward")
 
             elif btn.get_id() == BUTTON_Y:
                 if ui.page == "timetable":  # Scroll events page down
@@ -74,6 +83,8 @@ def press_handler(btn, pattern):
                     hwviewer.scroll(direction="down")
                 elif ui.page == "menu": # Highlight the button below
                     menu.scroll(direction="down")
+                elif ui.page == "timetable_change_date":
+                    timetable_change_date.change_date(direction="back")
 
 def menu_exec():
         # Executes code for selected entry
@@ -114,6 +125,7 @@ def device_to_sleep():
 def device_wake_up():
     # Turns on screen
     state.UI.sleeping = False
+    timetable.go()
     ui.screen_on()
 
 async def monitor_buttons():
@@ -125,7 +137,10 @@ async def monitor_buttons():
 
 async def update_menu_bar():
     while True:
-        if ui.page != "menu" and not state.UI.sleeping:
+        if (ui.page != "menu" and
+            ui.page != "timetable_change_date" and
+            not state.UI.sleeping
+            ):
             bar.draw()
         await asyncio.sleep_ms(1000) # Refresh menu bar every sec
 
@@ -138,8 +153,7 @@ async def sleep_handler():
         await asyncio.sleep_ms(display_update_time)
 
 async def update_data():
-    await asyncio.sleep(10)
-    print("running now")
+    await asyncio.sleep(1200)
     # Periodically updates data
     while True:
         wifi.test_connection()

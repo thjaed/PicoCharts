@@ -83,6 +83,8 @@ class LED:
     def updating(self):
         self.led.set_rgb(1, 0, 0) # dim red
 
+led = LED()
+
 class BootScreen:
     def draw(self):
         display.set_pen(BLACK)
@@ -149,20 +151,15 @@ class MenuBar:
             display.set_pen(GREY)
             display.rectangle(292, 4, 21, 6) # Grey background
             display.set_pen(WHITE)
-            #if battery.charging():
-            #    display.set_pen(GREEN) # Battery icon green if charging 
             display.rectangle(293, 5, (round((battery_level / 100) * 19)), 4) # Charge level
+
+bar = MenuBar()
 
 class Timetable:
     def __init__(self):
-        # Variables
-        self.data = []
-        self.box_heights = []
-        self.scroll_distance = 0
-        self.cumulative_box_height = 0
-
         # Constants
-        self.content_start = 15    # where menu bar ends
+        self.menu_bar_height = bar.height
+        self.date_indic_height = 15
         self.y_top_pad = 5         # space between top of text and top of box
         self.y_bot_pad = 5         # space between bottom of text and bottom of box
         self.x_pad = 5             # space between left side of screen and where text starts
@@ -172,18 +169,34 @@ class Timetable:
         self.period_number_box_width = 40
         self.period_number_box_pad = 10
 
-    def go(self):
+        # Variables
+        self.data = []
+        self.box_heights = []
+        self.scroll_distance = 0
+        self.cumulative_box_height = 0
+        self.show_date_indic = False
+        self.content_start = self.menu_bar_height
+
+    def go(self, alt_file=False):
         global page
         page = "timetable"
         self.scroll_distance = 0
+        if not alt_file:
+            file_name = "timetable.jsonl"
+            self.show_date = False
+        else:
+            file_name = "timetable_alt.jsonl"
+            self.show_date = True
 
         # Load data from file into self.data
         self.data = []
-        if "timetable.jsonl" in os.listdir():
-            with open("timetable.jsonl", "r") as f:
+        if file_name in os.listdir():
+            with open(file_name, "r") as f:
                 for l in f:
                     l = ujson.loads(l)
-                    if (state.WiFi.connected and l.get("end") > utime.time()) or (not state.WiFi.connected):
+                    if ((state.WiFi.connected and l.get("end") > utime.time()) or
+                        (not state.WiFi.connected) or
+                        (alt_file)):
                         self.data.append(l)
         else:
             message.show("No timetable file!")
@@ -195,11 +208,16 @@ class Timetable:
     def draw(self):
         display.set_pen(GREY)
         display.clear()
+
+        if self.show_date:
+            self.content_start = self.menu_bar_height + self.date_indic_height
+        else:
+            self.content_start = self.menu_bar_height
+        
+        self.cumulative_box_height = 0
+        self.box_heights = []
               
         if len(self.data) > 0:
-            self.cumulative_box_height = 0
-            self.box_heights = []
-
             for e in self.data: # loops through each event
                 y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
                 y_text_start = y_box_start + self.y_top_pad
@@ -286,12 +304,27 @@ class Timetable:
                         
         else:
             message.show("No more lessons today!")
-            
+        
+        if self.show_date:
+            # draw date label if we are not looking at today
+            display.set_pen(GREY)
+            display.rectangle(0, 15, WIDTH, 15) # Top bar
+            display.set_pen(WHITE)
+            display.line(0, 29, WIDTH, 29) # Line
+
+            date = f"Showing {timetable_chage_date.day}"
+
+            text_width = display.measure_text(date, scale=2)
+
+            display.set_pen(BLUE)
+
+            display.text(date, (WIDTH // 2 - text_width // 2), 15, scale=2) # Date
+
         bar.draw() # Draw menu bar on top
     
     def scroll(self, direction):
         # VIBECODED FUNCTION #
-        visible_height = 225
+        visible_height = HEIGHT - self.content_start
         scroll_offset = -self.scroll_distance # Scroll distance
         curr_height = 0
 
@@ -306,7 +339,6 @@ class Timetable:
                         self.scroll_distance = -(box_bottom - visible_height) # Set the scroll distance to the difference between the bottom of the box and the bottom of the screen
                         self.draw()
                         return
-
 
                     curr_height += box_height # Move on to next box coords (y value)
 
@@ -325,6 +357,68 @@ class Timetable:
                         return
 
                     curr_height += box_height # Move on to next box coords (y value)
+
+timetable = Timetable()
+
+class TimetableChangeDate:
+    def __init__(self):
+        self.day_offset = 0 # number of days from the current day
+        self.day = clock.get_date() # date string
+    
+    def go(self):
+        global page
+        page = "timetable_change_date"
+        # reset selected day
+        self.day_offset = 0
+        self.day = clock.get_date()
+
+        self.draw()
+    
+    def change_date(self, direction):
+        # move day offset
+        if direction == "back":
+            self.day_offset -= 1
+        elif direction == "forward":
+            self.day_offset += 1
+
+        # get day string from offset
+        self.day = clock.get_date(utime.time() - self.day_offset * 86400)
+
+        self.draw()
+    
+    def draw(self):
+        display.set_pen(GREY)
+        display.clear()
+
+        # date before
+        display.set_pen(DARK_GREY)
+        day = clock.get_date(utime.time() - self.day_offset * 86400 - 86400)
+        text_width = display.measure_text(day, scale=2)
+        display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) - 40, scale=2)
+        
+        # date
+        display.set_pen(WHITE)
+        text_width = display.measure_text(self.day, scale=2)
+        display.text(self.day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12), scale=2)
+    
+        # date after
+        display.set_pen(DARK_GREY)
+        day = clock.get_date(utime.time() - self.day_offset * 86400 + 86400)
+        text_width = display.measure_text(day, scale=2)
+        display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) + 40, scale=2)
+
+    
+    def select(self):
+        if self.day_offset == 0:
+            # go to normal timetable page if going to todays date
+            timetable.go()
+        else:
+            # get timetable for different date
+            message.show("Getting Timetable")
+            classcharts.save_timetable(date=clock.secs_to_date(utime.time() - self.day_offset * 86400), file_name="timetable_alt.jsonl")
+            timetable.go(alt_file=True)
+
+timetable_chage_date = TimetableChangeDate()
 
 class Behaviour:
     def __init__(self):
@@ -767,6 +861,8 @@ class HomeworkViewer:
 
         self.draw()
 
+hwviewer = HomeworkViewer()
+
 class Menu:
     def __init__(self):
         # Variables
@@ -832,7 +928,6 @@ class Message:
         
         display.update()
 
-led = LED()
 message = Message()
-hwviewer = HomeworkViewer()
-bar = MenuBar()
+
+

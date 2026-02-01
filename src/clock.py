@@ -61,6 +61,10 @@ def set_time_ntp():
         s.settimeout(1)
         res = s.sendto(NTP_QUERY, addr)
         msg = s.recv(48)
+    except OSError:
+        yield "Error setting time"
+        s.close()
+        return
     finally:
         s.close()
     ntp_time = ustruct.unpack("!I", msg[40:44])[0]
@@ -77,9 +81,9 @@ def date_to_secs(date):
     secs = utime.mktime([year, month, day, 0, 0, 0, 0, 0])
     return secs
 
-def today():
+def secs_to_date(time=None):
     # Returns date as a string in YYYY-MM-DD as needed by the classchars API
-    time = utime.localtime()
+    time = utime.localtime(time)
         
     day = str(time[2]) if time[2] > 9 else f"0{time[2]}"
     month = str(time[1]) if time[1] > 9 else f"0{time[1]}"
