@@ -3,6 +3,7 @@ from pimoroni import RGBLED # type: ignore
 import ujson # type: ignore
 import os
 import utime # type: ignore
+from time import sleep
 
 import battery
 import config
@@ -413,10 +414,15 @@ class TimetableChangeDate:
             # go to normal timetable page if going to todays date
             timetable.go()
         else:
-            # get timetable for different date
-            message.show("Getting Timetable")
-            classcharts.save_timetable(date=clock.secs_to_date(utime.time() - self.day_offset * 86400), file_name="timetable_alt.jsonl")
-            timetable.go(alt_file=True)
+            if wifi.test_connection():
+                # get timetable for different date
+                message.show("Getting Timetable")
+                classcharts.save_timetable(date=clock.secs_to_date(utime.time() - self.day_offset * 86400), file_name="timetable_alt.jsonl")
+                timetable.go(alt_file=True)
+            else:
+                message.show("OFFLINE")
+                sleep(1)
+                timetable.go()
 
 timetable_chage_date = TimetableChangeDate()
 
@@ -720,10 +726,11 @@ class Homework:
             hwviewer.go(task)
 
             if task_id in state.Homework.unseen_ids:
-                wifi.test_connection()
-                if state.WiFi.connected:
+                if wifi.test_connection():
                     # mark task as seen on classcharts if it is unseen
                     classcharts.mark_seen(task_id)
+                else:
+                    state.Homework.unseen_ids.remove(task_id)
 
                 if len(state.Homework.unseen_ids) == 0:
                     # turn led off if there are no other unseen tasks
@@ -876,7 +883,7 @@ class Menu:
     def go(self):
         global page
         page = "menu"
-        
+        self.selected = 0
         self.draw()
         
     def draw(self):
@@ -929,5 +936,3 @@ class Message:
         display.update()
 
 message = Message()
-
-

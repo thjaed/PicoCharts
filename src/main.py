@@ -113,7 +113,7 @@ def menu_exec():
                     message.show(text)
             else:
                 message.show("OFFLINE")
-                utime.sleep_ms(3000)
+                utime.sleep(1)
 
             timetable.go()
 
@@ -156,8 +156,7 @@ async def update_data():
     await asyncio.sleep(1200)
     # Periodically updates data
     while True:
-        wifi.test_connection()
-        if state.WiFi.connected and state.UI.sleeping:
+        if wifi.test_connection() and state.UI.sleeping:
             led.updating()
             for text in classcharts.save_data():
                 print(text)
@@ -193,8 +192,9 @@ def init():
     # Starts functions that need to be run asyncrously
     asyncio.create_task(monitor_buttons())
     asyncio.create_task(update_menu_bar())
-    asyncio.create_task(connection_tester())
-    asyncio.create_task(update_data())
+    if not config.FORCE_OFFLINE:
+        asyncio.create_task(connection_tester())
+        asyncio.create_task(update_data())
 
     # Start monitoring time to sleep
     state.UI.last_interaction_time = utime.time()
