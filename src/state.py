@@ -3,7 +3,11 @@ class WiFi:
 class UI:
     sleeping = False
     last_interaction_time = 0
+class LED:
+    status = []
 class Homework:
     unseen_ids = []
 class Battery:
     connected = False
+class Clock:
+    rtc_set = False

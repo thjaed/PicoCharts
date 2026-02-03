@@ -4,6 +4,7 @@ import usocket # type: ignore
 import ustruct # type: ignore
 
 import config
+import state
 
 cal_generated_today = False
 # Months and days as strings for displaying date
@@ -70,6 +71,7 @@ def set_time_ntp():
     ntp_time = ustruct.unpack("!I", msg[40:44])[0]
     t = utime.gmtime(ntp_time - NTP_DELTA + config.TZ_OFFSET_SEC)
     rtc.datetime((t[0], t[1], t[2], t[6] + 1, t[3], t[4], t[5], 0))
+    state.Clock.rtc_set = True
     yield "Time set"
 
 def date_to_secs(date):

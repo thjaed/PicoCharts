@@ -3,7 +3,6 @@ from pimoroni import RGBLED # type: ignore
 import ujson # type: ignore
 import os
 import utime # type: ignore
-from time import sleep
 
 import battery
 import config
@@ -73,16 +72,34 @@ def measure_wrapped_text(text, wrap_px, char_width, line_height):
 class LED:
     def __init__(self):
         self.led = RGBLED(6, 7, 8)
+        self.status = {
+            "updating_data": False,
+            "wifi_connecting": False,
+            "unseen_homework": False,
+            "booting": False
+        }
         self.off()
+    
+    def update(self, reason, b):
+        self.status[reason] = b
+        
+        if (self.status["updating_data"] or
+            self.status["wifi_connecting"] or
+            self.status["booting"]):
+            self.dim_red()
+        elif self.status["unseen_homework"]:
+            self.dim_blue()
+        else:
+            self.off()
     
     def off(self):
         self.led.set_rgb(0, 0, 0)
     
-    def notify(self):
-        self.led.set_rgb(0, 0, 1) # dim blue
+    def dim_blue(self):
+        self.led.set_rgb(0, 0, 1)
     
-    def updating(self):
-        self.led.set_rgb(1, 0, 0) # dim red
+    def dim_red(self):
+        self.led.set_rgb(1, 0, 0)
 
 led = LED()
 
@@ -126,7 +143,7 @@ class MenuBar:
         display.set_pen(WHITE)
         display.line(0, self.height - 1, WIDTH, self.height - 1) # Line
 
-        if not state.WiFi.connected:
+        if not state.Clock.rtc_set:
             # Draw offline indicator instead of date and time
             display.set_pen(RED)
 
@@ -195,8 +212,8 @@ class Timetable:
             with open(file_name, "r") as f:
                 for l in f:
                     l = ujson.loads(l)
-                    if ((state.WiFi.connected and l.get("end") > utime.time()) or
-                        (not state.WiFi.connected) or
+                    if ((state.Clock.rtc_set and l.get("end") > utime.time()) or
+                        (not state.Clock.rtc_set) or
                         (alt_file)):
                         self.data.append(l)
         else:
@@ -417,11 +434,13 @@ class TimetableChangeDate:
             if wifi.test_connection():
                 # get timetable for different date
                 message.show("Getting Timetable")
+                led.update("updating_data", True)
                 classcharts.save_timetable(date=clock.secs_to_date(utime.time() - self.day_offset * 86400), file_name="timetable_alt.jsonl")
+                led.update("updating_data", False)
                 timetable.go(alt_file=True)
             else:
                 message.show("OFFLINE")
-                sleep(1)
+                utime.sleep(1)
                 timetable.go()
 
 timetable_chage_date = TimetableChangeDate()
@@ -723,18 +742,21 @@ class Homework:
             task = self.data[self.selected]
             task_id = task["task_id"]
 
-            hwviewer.go(task)
-
             if task_id in state.Homework.unseen_ids:
                 if wifi.test_connection():
                     # mark task as seen on classcharts if it is unseen
+                    led.update("updating_data", True)
+                    message.show("Please Wait")
                     classcharts.mark_seen(task_id)
+                    led.update("updating_data", False)
                 else:
                     state.Homework.unseen_ids.remove(task_id)
 
                 if len(state.Homework.unseen_ids) == 0:
                     # turn led off if there are no other unseen tasks
-                    led.off()
+                    led.update("unseen_homework", False)
+
+            hwviewer.go(task)
     
     def scroll(self, direction):
         # BASED ON VIBECODED FUNCTION #

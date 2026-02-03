@@ -1,8 +1,6 @@
 import asyncio
 import utime # type: ignore
 import sys
-import os
-import ujson # type: ignore
 
 from pybuttons import Button
 from classcharts import ClassCharts
@@ -19,8 +17,8 @@ bar = ui.bar
 led = ui.led
 hwviewer = ui.hwviewer
 timetable = ui.timetable
-menu = ui.Menu()
 timetable_change_date = ui.timetable_chage_date
+menu = ui.Menu()
 behaviour = ui.Behaviour()
 attendance = ui.Attendence()
 homework = ui.Homework()
@@ -103,18 +101,19 @@ def menu_exec():
             homework.go()        
         
         elif name == "Connect and Refresh Data":
+            led.update("updating_data", True)
             for text in wifi.wifi_connect():
                 message.show(text)
     
             if state.WiFi.connected:
                 for text in clock.set_time_ntp():
                     message.show(text)
-                for text in classcharts.save_data():
-                    message.show(text)
+                get_data(print_type="message", background=False)
             else:
                 message.show("OFFLINE")
                 utime.sleep(1)
 
+            led.update("updating_data", False)
             timetable.go()
 
 def device_to_sleep():
@@ -127,6 +126,20 @@ def device_wake_up():
     state.UI.sleeping = False
     timetable.go()
     ui.screen_on()
+
+def get_data(print_type, background):
+    if wifi.test_connection() and ((state.UI.sleeping and background) or (not background)):
+        led.update("updating_data", True)
+
+        for text in classcharts.save_data():
+            if print_type == "console": print(text)
+            elif print_type == "message": message.show(text)
+            elif print_type == "boot": bootscreen.print(text)
+
+        led.update("updating_data", False)
+
+        # Turn LED on if there are unseen hw tasks
+        led.update("unseen_homework", len(state.Homework.unseen_ids) > 0)
 
 async def monitor_buttons():
     # Watches for input on buttons
@@ -156,28 +169,23 @@ async def update_data():
     await asyncio.sleep(1200)
     # Periodically updates data
     while True:
-        if wifi.test_connection() and state.UI.sleeping:
-            led.updating()
-            for text in classcharts.save_data():
-                print(text)
-            led.off()
-
-            # Turn LED on if there are unseen hw tasks
-            if len(state.Homework.unseen_ids) > 0:
-                led.notify()
-            else:
-                led.off()
-        
+        get_data(print_type="console", background=True)
         await asyncio.sleep(1200)
 
 async def connection_tester():
     # Periodically check for wifi connectivity
     while True:
-        wifi.test_connection()
+        if not wifi.test_connection() and state.UI.sleeping:
+            # attempt to connect if there is no connection
+            led.update("wifi_connecting", True)
+            wifi.wifi_connect()
+            led.update("wifi_connecting", False)
+
         await asyncio.sleep(30)
     
 def init():
     # Startup sequence
+    led.update("booting", True)
     bootscreen.draw()
     bootscreen.print("Initialising Battery")
     battery.init()
@@ -186,8 +194,7 @@ def init():
     if state.WiFi.connected:
         for text in clock.set_time_ntp():
             bootscreen.print(text)
-        for text in classcharts.save_data():
-            bootscreen.print(text)
+        get_data(print_type="boot", background=False)
     
     # Starts functions that need to be run asyncrously
     asyncio.create_task(monitor_buttons())
@@ -204,6 +211,7 @@ def init():
     timetable.go()
 
     print("Finished startup")
+    led.update("booting", False)
 
 async def main():
     init()
