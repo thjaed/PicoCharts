@@ -898,7 +898,14 @@ class Menu:
         self.selected = 0
 
         # Constants
-        self.entries = ["Timetable", "Behaviour", "Attendance", "Homework", "Connect and Refresh Data"]
+        self.entries = [
+                        "Timetable",
+                        "Behaviour",
+                        "Attendance",
+                        "Homework",
+                        "Connect and Refresh Data",
+                        "Quit Program"
+                    ]
         self.box_height = 32
         self.y_top_pad = 8
 
