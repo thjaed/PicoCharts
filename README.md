@@ -14,12 +14,12 @@
  Here are some features of PicoCharts:
 
 ### Timetable
--  Label next to lessons that have homework due in on
+ -  Label next to lessons that have homework due in on
  - Timetables for different days can be viewed
  - Custom breaks can be added, e.g. Lunch or Break
+ - 'Next' label on lessons
  - Lessons in the past are automatically removed
  - Auto-updates after a new day
- - 'Next' label on lessons (*Coming  very soon*)
 
 ### Behaviour
  - Easily choose a time range (Since August, This Week or Last Week)
@@ -27,12 +27,14 @@
 
 ### Attendance
  - Colour-coded background based on percentage
- - Easily  choose a time range (Since August, This Week or Last Week)
+ - Easily choose a time range (Since August, This Week or Last Week)
 
 ### Homework
  - Front LED turns on if there is unseen homework
  - Description can be viewed by clicking on homework task
+ - Tasks can be marked as completed (*Coming  very soon*)
  - Due-date colour coded to make it clear if a homework is late or not
+
  - Homework marked as seen on ClassCharts when it is clicked on
 
 ## Use of AI generated code

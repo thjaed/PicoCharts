@@ -204,6 +204,10 @@ class Timetable:
         self.title_pad = 5         # space after title to visually separate it
         self.period_number_box_width = 40
         self.period_number_box_pad = 10
+        self.label_edge_pad = 4
+        self.label_text_x_pad = 5
+        self.label_box_height = 18
+        self.label_y_text_pad = 2
 
         # Variables
         self.data = []
@@ -254,10 +258,18 @@ class Timetable:
         self.box_heights = []
               
         if len(self.data) > 0:
+            now = utime.time()
+            future_times = [e["start"] for e in self.data if e["start"] > now]
+
             for e in self.data: # loops through each event
                 y_box_start = self.content_start + self.scroll_distance + self.cumulative_box_height
                 y_text_start = y_box_start + self.y_top_pad
-                 
+                label_box_y = y_text_start
+                next_event = False
+
+                if len(future_times) > 0 and e["start"] == min(future_times):
+                    next_event = True
+
                 if e["type"] == "lesson":
                     subject = e["subject"]
                     time = e["time"]
@@ -350,6 +362,26 @@ class Timetable:
                 # Bottom bar
                     display.set_pen(WHITE)
                     display.line(0, y_box_start + box_height - 1, WIDTH, y_box_start + box_height - 1, 3)
+
+                if next_event:
+                        # draw 'Next' label
+                        text_width = display.measure_text("Next", scale=2)
+
+                        label_y_text_start = label_box_y + self.label_y_text_pad
+
+                        x_start = WIDTH - self.label_edge_pad - text_width - self.label_text_x_pad - self.label_text_x_pad
+                        label_x_text_start = x_start + self.label_text_x_pad
+
+                        display.set_pen(WHITE)
+                        display.rectangle(
+                          x_start,
+                          label_box_y,
+                          self.label_text_x_pad + text_width + self.label_text_x_pad,
+                          self.label_box_height
+                        )
+
+                        display.set_pen(BLACK)
+                        display.text("Next", label_x_text_start, label_y_text_start, scale=2)
 
                 self.cumulative_box_height += box_height
                         
