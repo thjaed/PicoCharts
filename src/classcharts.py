@@ -1,5 +1,6 @@
 import ujson # type: ignore
 import utime # type: ignore
+import os
 
 from uclasscharts_api import StudentClient
 import clock
@@ -57,18 +58,17 @@ class ClassCharts:
         # Authenticate with ClassCharts API
         self.client = StudentClient(code=secrets.CC_CODE, dob=secrets.CC_DOB)
 
-        return "Authenticated with CC"
-
     def save_data(self):
-        yield self.login()
+        yield "Logging In"
+        self.login()
+        yield "Getting Homework"
+        self.save_homework(login=False)
         yield "Getting Timetable"
         self.save_timetable(login=False)
         yield "Getting Behaviour"
         self.save_behaviour(login=False)
         yield "Getting Attendance"
         self.save_attendance(login=False)
-        yield "Getting Homework"
-        self.save_homework(login=False)
 
         yield "All data saved"
 
@@ -101,6 +101,20 @@ class ClassCharts:
             
             # Word Replacements
             if subject == "Art & Design - Photography": subject = "Photography"
+
+            if "homework.jsonl" in os.listdir():
+                with open("homework.jsonl", "r") as f:
+                    for t in f:
+                        t = ujson.loads(t)
+                        hw_task = None
+                        if (t["due_date"] == date) and (t["subject"] == subject):
+                            hw_task = {
+                                "title": t["title"],
+                                "completed": t["completed"]
+                            }
+                            break
+            else:
+                hw_task = None
                 
             # Put data in json format so it can be saved to a file
             timetable.append({
@@ -112,7 +126,8 @@ class ClassCharts:
                 "end": clock.clock_str_to_secs(end_time),
                 "period_num": period_code,
                 "type": "lesson",
-                "date": date
+                "date": date,
+                "hw_task": hw_task
             })
 
         if len(timetable) > 0:
@@ -246,11 +261,14 @@ class ClassCharts:
 
             due_date_str = clock.get_date(due_date_secs)
             issue_date_str = clock.get_date(clock.date_to_secs(issue_date))
+
+            if subject == "Art & Design - Photography": subject = "Photography"
             
             homeworks.append({
                 "title": title,
                 "teacher": teacher,
                 "subject": subject,
+                "due_date": due_date,
                 "due_date_str": due_date_str,
                 "issue_date_str": issue_date_str,
                 "completed": completed,

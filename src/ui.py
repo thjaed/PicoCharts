@@ -69,6 +69,24 @@ def measure_wrapped_text(text, wrap_px, char_width, line_height):
 
     return lines * line_height
 
+def truncate_text(text, max_px, char_width):
+    text_width = 0
+    trunc_str = ""
+
+    for c in text:
+        if text_width + char_width > max_px:
+            break
+        else:
+            text_width += char_width
+            trunc_str += c
+
+    trunc_str = trunc_str.strip()
+
+    if len(trunc_str) < len(text):
+        trunc_str += "..."
+
+    return trunc_str
+
 class LED:
     def __init__(self):
         self.led = RGBLED(6, 7, 8)
@@ -246,8 +264,12 @@ class Timetable:
                     room = e["room"]
                     teacher = e["teacher"]
                     period_num = e["period_num"]
-
-                    box_height = self.y_top_pad + (self.title_height + self.title_pad) + (self.line_height * 3) + self.y_bot_pad
+                    hw_task = e["hw_task"]
+                    if hw_task is not None:
+                        num_lines = 4
+                    else:
+                        num_lines = 3
+                    box_height = self.y_top_pad + (self.title_height + self.title_pad) + (self.line_height * num_lines) + self.y_bot_pad
 
                     # used for scrolling
                     self.box_heights.append(box_height)
@@ -290,6 +312,17 @@ class Timetable:
 
                     display.text(teacher, x_pad, y_text_start, scale=2)
                     y_text_start += 14
+
+                    if hw_task is not None:
+                        hw_completed = hw_task["completed"]
+                        hw_title = hw_task["title"]
+
+                        if hw_completed: display.set_pen(GREEN)
+                        else: display.set_pen(RED)
+
+                        display.text(truncate_text(f"Homework: {hw_title}", max_px=WIDTH - self.period_number_box_width + 20, char_width=12), x_pad, y_text_start, scale=2)
+                        y_text_start += 14
+
                 elif e["type"] == "break":
                     time = e["time"]
                     name = e["name"]

@@ -14,15 +14,15 @@
  Here are some features of PicoCharts:
 
 ### Timetable
+-  Label next to lessons that have homework due in on
  - Timetables for different days can be viewed
  - Custom breaks can be added, e.g. Lunch or Break
  - Lessons in the past are automatically removed
  - Auto-updates after a new day
- - 'Current' and 'Next' labels on lessons (*Coming  very soon*)
- -  Label next to lessons that have homework due in on (*Coming  very soon*)
+ - 'Next' label on lessons (*Coming  very soon*)
 
 ### Behaviour
- - Easily  choose a time range (Since August, This Week or Last Week)
+ - Easily choose a time range (Since August, This Week or Last Week)
  - View reasons for behaviour points (*Coming  very soon*)
 
 ### Attendance
