@@ -130,7 +130,6 @@ def device_to_sleep():
 def device_wake_up():
     # Turns on screen
     state.UI.sleeping = False
-    timetable.go()
     ui.screen_on()
 
 def get_data(print_type, background):
