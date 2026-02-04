@@ -214,19 +214,17 @@ class Timetable:
         self.box_heights = []
         self.scroll_distance = 0
         self.cumulative_box_height = 0
-        self.show_date_indic = False
         self.content_start = self.menu_bar_height
 
     def go(self, alt_file=False):
         global page
         page = "timetable"
         self.scroll_distance = 0
-        if not alt_file:
+        self.alt_file = alt_file
+        if not self.alt_file:
             file_name = "timetable.jsonl"
-            self.show_date = False
         else:
             file_name = "timetable_alt.jsonl"
-            self.show_date = True
 
         # Load data from file into self.data
         self.data = []
@@ -249,7 +247,7 @@ class Timetable:
         display.set_pen(GREY)
         display.clear()
 
-        if self.show_date:
+        if self.alt_file:
             self.content_start = self.menu_bar_height + self.date_indic_height
         else:
             self.content_start = self.menu_bar_height
@@ -267,7 +265,7 @@ class Timetable:
                 label_box_y = y_text_start
                 next_event = False
 
-                if len(future_times) > 0 and e["start"] == min(future_times):
+                if len(future_times) > 0 and e["start"] == min(future_times) and not self.alt_file:
                     next_event = True
 
                 if e["type"] == "lesson":
@@ -275,6 +273,7 @@ class Timetable:
                     time = e["time"]
                     room = e["room"]
                     teacher = e["teacher"]
+                    teacher = "not doxxing my teacher"
                     period_num = e["period_num"]
                     hw_task = e["hw_task"]
                     if hw_task is not None:
@@ -388,7 +387,7 @@ class Timetable:
         else:
             message.show("No more lessons today!")
         
-        if self.show_date:
+        if self.alt_file:
             # draw date label if we are not looking at today
             display.set_pen(GREY)
             display.rectangle(0, 15, WIDTH, 15) # Top bar
