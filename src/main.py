@@ -129,6 +129,9 @@ def device_to_sleep():
 
 def device_wake_up():
     # Turns on screen
+    if state.UI.reset_page_after_sleep:
+        timetable.go()
+    state.UI.reset_page_after_sleep = False
     state.UI.sleeping = False
     ui.screen_on()
 
@@ -166,9 +169,11 @@ async def sleep_handler():
     # Puts screen to sleep after certain time has elapsed from last interaction
     while True:
         time = utime.time()
-        if time - config.SLEEP_TIME_SEC > state.UI.last_interaction_time and state.UI.sleeping == False:
+        if state.UI.sleeping and time - config.SLEEP_TIME_SEC - 600 > state.UI.last_interaction_time:
+            state.UI.reset_page_after_sleep = True
+        if not state.UI.sleeping and time - config.SLEEP_TIME_SEC > state.UI.last_interaction_time:
             device_to_sleep()
-        await asyncio.sleep_ms(display_update_time)
+        await asyncio.sleep(1)
 
 async def update_data():
     await asyncio.sleep(1200)
