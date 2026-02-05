@@ -216,15 +216,12 @@ class Timetable:
         self.cumulative_box_height = 0
         self.content_start = self.menu_bar_height
 
-    def go(self, alt_file=False):
+    def go(self, file_name="timetable.jsonl"):
         global page
         page = "timetable"
         self.scroll_distance = 0
-        self.alt_file = alt_file
-        if not self.alt_file:
-            file_name = "timetable.jsonl"
-        else:
-            file_name = "timetable_alt.jsonl"
+
+        self.alt_file = file_name is not "timetable.jsonl"
 
         # Load data from file into self.data
         self.data = []
@@ -234,7 +231,7 @@ class Timetable:
                     l = ujson.loads(l)
                     if ((state.Clock.rtc_set and l.get("end") > utime.time()) or
                         (not state.Clock.rtc_set) or
-                        (alt_file)):
+                        (self.alt_file)):
                         self.data.append(l)
         else:
             message.show("No timetable file!")
@@ -445,7 +442,7 @@ timetable = Timetable()
 class TimetableChangeDate:
     def __init__(self):
         self.day_offset = 0 # number of days from the current day
-        self.day = clock.get_date() # date string
+        self.day = "" # date string
     
     def go(self):
         global page
@@ -472,9 +469,10 @@ class TimetableChangeDate:
         display.set_pen(GREY)
         display.clear()
 
+        timestamp = utime.time() - self.day_offset * 86400
         # date before
         display.set_pen(DARK_GREY)
-        day = clock.get_date(utime.time() - self.day_offset * 86400 - 86400)
+        day = clock.get_date(timestamp - 86400)
         text_width = display.measure_text(day, scale=2)
         display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) - 40, scale=2)
         
@@ -485,7 +483,7 @@ class TimetableChangeDate:
     
         # date after
         display.set_pen(DARK_GREY)
-        day = clock.get_date(utime.time() - self.day_offset * 86400 + 86400)
+        day = clock.get_date(timestamp + 86400)
         text_width = display.measure_text(day, scale=2)
         display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) + 40, scale=2)
 
@@ -495,14 +493,42 @@ class TimetableChangeDate:
             # go to normal timetable page if going to todays date
             timetable.go()
         else:
-            if wifi.test_connection():
-                # get timetable for different date
+            date = clock.secs_to_date(utime.time() - self.day_offset * 86400)
+            
+            # list files that are for the target date
+            available_files = [f for f in os.listdir() if "timetable_" in f and date in f]
+            print(f"Avalable Files: {available_files}")
+            gen_new_file = len(available_files) == 0
+
+            if not gen_new_file:
+                # point to the newest file if it has already been generated
+                file_name = sorted(available_files, key=lambda x: int(x.split("gen-")[1].split(".jsonl")[0]))[-1]
+                print(f"File already generated, poiting to {file_name}")
+                # go to existing file
+                timetable.go(file_name=file_name)
+
+            elif wifi.test_connection():
+                # if connected to internet and no file found
                 message.show("Getting Timetable")
+
+                # check if max file count has been reached
+                files = [f for f in os.listdir() if "timetable_" in f]
+                if len(files) >= config.MAX_EXTRA_TIMETABLES:
+                    # sort in order of creation date
+                    sorted_files = sorted(files, key=lambda x: int(x.split("gen-")[1].split(".jsonl")[0]))
+                    # delete oldest one
+                    os.remove(sorted_files[0])
+
+                file_name_to_save = f"timetable_{date}_gen-{utime.time()}.jsonl"
+
                 led.update("updating_data", True)
-                classcharts.save_timetable(date=clock.secs_to_date(utime.time() - self.day_offset * 86400), file_name="timetable_alt.jsonl")
+                classcharts.save_timetable(date=date, file_name=file_name_to_save)
                 led.update("updating_data", False)
-                timetable.go(alt_file=True)
+
+                timetable.go(file_name=file_name_to_save)
+                
             else:
+                # if no file and not online
                 message.show("OFFLINE")
                 utime.sleep(1)
                 timetable.go()
