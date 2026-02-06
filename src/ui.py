@@ -236,7 +236,28 @@ class Timetable:
         else:
             message.show("No timetable file!")
             return False
-                
+
+        if "homework.jsonl" in os.listdir() and len(self.data) > 0:
+            # add homework tasks to lessons
+
+            with open("homework.jsonl", "r") as f:
+                hw = []
+                for t in f:
+                    hw.append(ujson.loads(t))
+
+            for l in self.data:
+                # loop through lessons
+                if l["type"] == "lesson":
+                    for t in hw:
+                        # loop through homework tasks
+                        if (t["due_date"] == l["date"]) and (t["subject"] == l["subject"]):
+                            # add homework task to lesson if its subject and due date matches
+                            l["hw_task"] = {
+                                "title": t["title"],
+                                "completed": t["completed"]
+                            }
+                            break
+
         self.draw()
         bar.draw()
     
@@ -270,12 +291,12 @@ class Timetable:
                     time = e["time"]
                     room = e["room"]
                     teacher = e["teacher"]
-                    teacher = "not doxxing my teacher"
                     period_num = e["period_num"]
-                    hw_task = e["hw_task"]
-                    if hw_task is not None:
+                    if e.get("hw_task"):
+                        hw_task = e["hw_task"]
                         num_lines = 4
                     else:
+                        hw_task = None
                         num_lines = 3
                     box_height = self.y_top_pad + (self.title_height + self.title_pad) + (self.line_height * num_lines) + self.y_bot_pad
 
@@ -496,14 +517,12 @@ class TimetableChangeDate:
             date = clock.secs_to_date(utime.time() - self.day_offset * 86400)
             
             # list files that are for the target date
-            available_files = [f for f in os.listdir() if "timetable_" in f and date in f]
-            print(f"Avalable Files: {available_files}")
-            gen_new_file = len(available_files) == 0
+            available_file = [f for f in os.listdir() if "timetable_" in f and date in f]
+            gen_new_file = len(available_file) == 0
 
             if not gen_new_file:
                 # point to the newest file if it has already been generated
-                file_name = sorted(available_files, key=lambda x: int(x.split("gen-")[1].split(".jsonl")[0]))[-1]
-                print(f"File already generated, poiting to {file_name}")
+                file_name = available_file[0]
                 # go to existing file
                 timetable.go(file_name=file_name)
 
@@ -515,11 +534,11 @@ class TimetableChangeDate:
                 files = [f for f in os.listdir() if "timetable_" in f]
                 if len(files) >= config.MAX_EXTRA_TIMETABLES:
                     # sort in order of creation date
-                    sorted_files = sorted(files, key=lambda x: int(x.split("gen-")[1].split(".jsonl")[0]))
+                    sorted_files = sorted(files, key=lambda x: int(clock.date_to_secs(x.split("timetable_")[1].split(".jsonl")[0])))
                     # delete oldest one
                     os.remove(sorted_files[0])
 
-                file_name_to_save = f"timetable_{date}_gen-{utime.time()}.jsonl"
+                file_name_to_save = f"timetable_{date}.jsonl"
 
                 led.update("updating_data", True)
                 classcharts.save_timetable(date=date, file_name=file_name_to_save)

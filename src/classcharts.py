@@ -101,20 +101,6 @@ class ClassCharts:
             
             # Word Replacements
             if subject == "Art & Design - Photography": subject = "Photography"
-
-            if "homework.jsonl" in os.listdir():
-                with open("homework.jsonl", "r") as f:
-                    for t in f:
-                        t = ujson.loads(t)
-                        hw_task = None
-                        if (t["due_date"] == date) and (t["subject"] == subject):
-                            hw_task = {
-                                "title": t["title"],
-                                "completed": t["completed"]
-                            }
-                            break
-            else:
-                hw_task = None
                 
             # Put data in json format so it can be saved to a file
             timetable.append({
@@ -126,8 +112,7 @@ class ClassCharts:
                 "end": clock.clock_str_to_secs(end_time),
                 "period_num": period_code,
                 "type": "lesson",
-                "date": date,
-                "hw_task": hw_task
+                "date": date
             })
 
         if len(timetable) > 0:
