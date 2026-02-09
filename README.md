@@ -32,9 +32,7 @@
 ### Homework
  - Front LED turns on if there is unseen homework
  - Description can be viewed by clicking on homework task
- - Tasks can be marked as completed (*Coming  very soon*)
  - Due-date colour coded to make it clear if a homework is late or not
-
  - Homework marked as seen on ClassCharts when it is clicked on
 
 ## Use of AI generated code

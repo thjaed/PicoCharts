@@ -116,12 +116,6 @@ def menu_exec():
             led.update("updating_data", False)
             timetable.go()
         
-        elif name == "Quit Program":
-            message.show("Goodbye!")
-            utime.sleep(1)
-            ui.cleanup()
-            sys.exit()
-
 def device_to_sleep():
     # Turns off screen
     state.UI.sleeping = True

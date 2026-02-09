@@ -12,7 +12,6 @@ from classcharts import ClassCharts
 import wifi
 
 display = PicoGraphics(display=DISPLAY_PICO_DISPLAY_2, pen_type=PEN_P4)
-brightness = config.BRIGHTNESS
 
 classcharts = ClassCharts()
 
@@ -34,22 +33,15 @@ def setup():
     led.off()
     display.set_font("bitmap6")
     display.set_backlight(config.BRIGHTNESS)
-    page = "timetable"
     
 def update():
     display.update()
     
-def set_brightness(level):
-    global brightness
-    display.set_backlight(level)
-    brightness = level
-    print(f"Set brightness to {brightness}")
-
 def screen_off():
     display.set_backlight(0)
 
 def screen_on():
-    display.set_backlight(brightness)
+    display.set_backlight(config.BRIGHTNESS)
 
 def cleanup():
     display.clear()
@@ -126,9 +118,9 @@ class BootScreen:
         display.set_pen(BLACK)
         display.clear()
 
-        # Splash text
         display.set_pen(WHITE)
 
+        # Splash text
         text_width = display.measure_text("PICOCHARTS", scale=4)
         display.text("PICOCHARTS", 160 -  text_width // 2, 50, scale=4)
 
@@ -178,8 +170,8 @@ class MenuBar:
             display.text(time, 0, 0, scale=2) # Clock
             display.text(date, int((clock_width + (290 - clock_width) / 2) - (date_width / 2)), 0, scale=2) # Date
 
-        #Battery Icon
         if state.Battery.connected:
+            #Battery Icon
             battery_level = battery.percentage()
             display.set_pen(WHITE)
             display.rectangle(290, 2, 25, 10) # White border
@@ -1012,8 +1004,7 @@ class Menu:
                         "Behaviour",
                         "Attendance",
                         "Homework",
-                        "Connect and Refresh Data",
-                        "Quit Program"
+                        "Connect and Refresh Data"
                     ]
         self.box_height = 32
         self.y_top_pad = 8
