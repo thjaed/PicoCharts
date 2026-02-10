@@ -208,12 +208,33 @@ class Timetable:
         self.cumulative_box_height = 0
         self.content_start = self.menu_bar_height
 
-    def go(self, file_name="timetable.jsonl"):
+    def go(self, date=None):
         global page
         page = "timetable"
         self.scroll_distance = 0
 
-        self.alt_file = file_name is not "timetable.jsonl"
+        if date is None and not state.Clock.rtc_set:
+            # point to earliest file
+            available_files = [f.split("timetable_")[1].split(".jsonl")[0] for f in os.listdir() if "timetable_" in f]
+            if len(available_files) > 0:
+                available_files = sorted(available_files, key=clock.date_to_secs)
+                self.date = available_files[0]
+            else:
+                # last resort if offline and no files
+                self.date = None
+
+        elif date is None:
+            # today
+            self.date = clock.secs_to_date()
+
+        else:
+            # point to specified file
+            self.date = date
+
+        # show blue date banner
+        self.show_date = (not state.Clock.rtc_set) or (self.date != clock.secs_to_date())
+
+        file_name = f"timetable_{self.date}.jsonl"
 
         # Load data from file into self.data
         self.data = []
@@ -223,7 +244,7 @@ class Timetable:
                     l = ujson.loads(l)
                     if ((state.Clock.rtc_set and l.get("end") > utime.time()) or
                         (not state.Clock.rtc_set) or
-                        (self.alt_file)):
+                        (state.Clock.rtc_set and self.date != clock.secs_to_date())):
                         self.data.append(l)
         else:
             message.show("No timetable file!")
@@ -257,7 +278,7 @@ class Timetable:
         display.set_pen(GREY)
         display.clear()
 
-        if self.alt_file:
+        if self.show_date:
             self.content_start = self.menu_bar_height + self.date_indic_height
         else:
             self.content_start = self.menu_bar_height
@@ -275,7 +296,10 @@ class Timetable:
                 label_box_y = y_text_start
                 next_event = False
 
-                if len(future_times) > 0 and e["start"] == min(future_times) and not self.alt_file:
+                if ((len(future_times) > 0) and 
+                (e["start"] == min(future_times)) and
+                (not self.show_date) and
+                (state.Clock.rtc_set)):
                     next_event = True
 
                 if e["type"] == "lesson":
@@ -397,20 +421,20 @@ class Timetable:
         else:
             message.show("No more lessons today!")
         
-        if self.alt_file:
+        if self.show_date:
             # draw date label if we are not looking at today
             display.set_pen(GREY)
             display.rectangle(0, 15, WIDTH, 15) # Top bar
             display.set_pen(WHITE)
             display.line(0, 29, WIDTH, 29) # Line
 
-            date = f"Showing {timetable_chage_date.day}"
+            text = f"Showing {clock.get_date(clock.date_to_secs(self.date))}"
 
-            text_width = display.measure_text(date, scale=2)
+            text_width = display.measure_text(text, scale=2)
 
             display.set_pen(BLUE)
 
-            display.text(date, (WIDTH // 2 - text_width // 2), 15, scale=2) # Date
+            display.text(text, (WIDTH // 2 - text_width // 2), 15, scale=2) # Date
 
         bar.draw() # Draw menu bar on top
     
@@ -455,68 +479,113 @@ timetable = Timetable()
 class TimetableChangeDate:
     def __init__(self):
         self.day_offset = 0 # number of days from the current day
-        self.day = "" # date string
+        self.day_timestamp = 0
+        self.available_days = []
+        self.scrolled = 0
     
     def go(self):
         global page
         page = "timetable_change_date"
+        self.offline = not wifi.test_connection() or not state.Clock.rtc_set
         # reset selected day
         self.day_offset = 0
-        self.day = clock.get_date()
+        self.day_timestamp = utime.time()
 
-        self.draw()
+        # get dates of timetables already stored
+        self.available_days = [f.split("timetable_")[1].split(".jsonl")[0] for f in os.listdir() if "timetable_" in f]
+
+        # convert the date in the file name to a timestamp and sort them
+        self.available_days_timestamp = sorted(list(map(clock.date_to_secs, self.available_days)))
+
+        # convert the sorted timestamps into date strings to be displayed
+        self.available_days = list(map(clock.get_date, self.available_days_timestamp))
+
+        if len(self.available_days) > 0 or not self.offline:
+            self.draw()
+        else:
+            message.show("No files!")
     
-    def change_date(self, direction):
-        # move day offset
-        if direction == "back":
-            self.day_offset -= 1
-        elif direction == "forward":
-            self.day_offset += 1
+    def scroll(self, direction):
+        if self.offline and len(self.available_days) > 0:
+            if direction == "back" and self.scrolled - 1 >= 0:
+                self.scrolled -= 1
+            elif direction == "back" and self.scrolled == 0:
+                self.scrolled = len(self.available_days_timestamp) - 1
+            elif direction == "forward" and self.scrolled + 1 < len(self.available_days_timestamp):
+                self.scrolled += 1
+            elif direction == "forward" and self.scrolled == len(self.available_days_timestamp) - 1:
+                self.scrolled = 0
+            
+            self.day_timestamp = self.available_days_timestamp[self.scrolled]
 
-        # get day string from offset
-        self.day = clock.get_date(utime.time() - self.day_offset * 86400)
+            self.draw()
 
-        self.draw()
+        elif not self.offline:
+            if direction == "back":
+                self.day_offset -= 1
+            elif direction == "forward":
+                self.day_offset += 1
+
+            self.day_timestamp = utime.time() + self.day_offset * 86400
+
+            self.draw()
     
     def draw(self):
         display.set_pen(GREY)
         display.clear()
 
-        timestamp = utime.time() - self.day_offset * 86400
-        # date before
-        display.set_pen(DARK_GREY)
-        day = clock.get_date(timestamp - 86400)
-        text_width = display.measure_text(day, scale=2)
-        display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) - 40, scale=2)
-        
-        # date
-        display.set_pen(WHITE)
-        text_width = display.measure_text(self.day, scale=2)
-        display.text(self.day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12), scale=2)
-    
-        # date after
-        display.set_pen(DARK_GREY)
-        day = clock.get_date(timestamp + 86400)
-        text_width = display.measure_text(day, scale=2)
-        display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) + 40, scale=2)
+        if self.offline:
+            display.set_pen(RED)
+            text_width = display.measure_text("Offline files", scale=2)
+            display.text("Offline files", (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) - 100, scale=2)
 
+            for index, day_timestamp in enumerate(self.available_days_timestamp):
+                height_offset = 0
+                if abs(index - self.scrolled) in [1, 0]:
+                    # if text is selected or adjacent to selected
+                    if index == self.scrolled:
+                        # if selected
+                        display.set_pen(WHITE)
+                        self.day_timestamp = day_timestamp
+                    elif abs(index - self.scrolled) == 1:
+                        # if adjacant
+                        display.set_pen(DARK_GREY)
+                
+                    height_offset = (index - self.scrolled) * 40 # should problably make 40 a constant
+
+                    day = clock.get_date(day_timestamp) # pretty day sting
+                    text_width = display.measure_text(day, scale=2)
+                    display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) + height_offset, scale=2)
+        else:
+            for pos in [-1, 0, 1]:
+                day = clock.get_date(self.day_timestamp + (pos * 86400))
+
+                if pos == 0 and day in self.available_days:
+                    # green if file saved already
+                    display.set_pen(GREEN)
+                elif pos == 0:
+                    # white if not downloaded
+                    display.set_pen(WHITE)
+                else:
+                    # not selected, adjacent
+                    display.set_pen(DARK_GREY)
+
+                text_width = display.measure_text(day, scale=2)
+                display.text(day, (WIDTH // 2 - text_width // 2), (HEIGHT // 2 - 12) + (pos * 40), scale=2)
     
     def select(self):
-        if self.day_offset == 0:
+        if not self.offline and self.day_offset == 0:
             # go to normal timetable page if going to todays date
             timetable.go()
-        else:
-            date = clock.secs_to_date(utime.time() - self.day_offset * 86400)
+        elif (not self.offline) or (self.offline and len(self.available_days) > 0):
+            date = clock.secs_to_date(self.day_timestamp)
             
             # list files that are for the target date
-            available_file = [f for f in os.listdir() if "timetable_" in f and date in f]
-            gen_new_file = len(available_file) == 0
+            file_exists = f"timetable_{date}.jsonl" in os.listdir()
 
-            if not gen_new_file:
-                # point to the newest file if it has already been generated
-                file_name = available_file[0]
+            if file_exists:
                 # go to existing file
-                timetable.go(file_name=file_name)
+                timetable.go(date=date)
 
             elif wifi.test_connection():
                 # if connected to internet and no file found
@@ -530,13 +599,11 @@ class TimetableChangeDate:
                     # delete oldest one
                     os.remove(sorted_files[0])
 
-                file_name_to_save = f"timetable_{date}.jsonl"
-
                 led.update("updating_data", True)
-                classcharts.save_timetable(date=date, file_name=file_name_to_save)
+                classcharts.save_timetable(date=date)
                 led.update("updating_data", False)
 
-                timetable.go(file_name=file_name_to_save)
+                timetable.go(date=date)
                 
             else:
                 # if no file and not online

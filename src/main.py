@@ -70,7 +70,7 @@ def press_handler(btn, pattern):
                 elif ui.page == "menu": # Highlight the button above
                     menu.scroll(direction="up")
                 elif ui.page == "timetable_change_date":
-                    timetable_change_date.change_date(direction="forward")
+                    timetable_change_date.scroll(direction="back")
 
             elif btn.get_id() == BUTTON_Y:
                 if ui.page == "timetable":  # Scroll events page down
@@ -82,7 +82,7 @@ def press_handler(btn, pattern):
                 elif ui.page == "menu": # Highlight the button below
                     menu.scroll(direction="down")
                 elif ui.page == "timetable_change_date":
-                    timetable_change_date.change_date(direction="back")
+                    timetable_change_date.scroll(direction="forward")
 
 def menu_exec():
         # Executes code for selected entry
@@ -130,7 +130,8 @@ def device_wake_up():
     ui.screen_on()
 
 def get_data(print_type, background):
-    if wifi.test_connection() and ((state.UI.sleeping and background) or (not background)):
+    if (wifi.test_connection() and ((state.UI.sleeping and background) or (not background))
+        and state.Clock.rtc_set):
         led.update("updating_data", True)
 
         for text in classcharts.save_data():

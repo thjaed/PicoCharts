@@ -63,8 +63,10 @@ class ClassCharts:
         self.login()
         yield "Getting Homework"
         self.save_homework(login=False)
-        yield "Getting Timetable"
-        self.save_timetable(login=False)
+        if f"timetable_{clock.secs_to_date()}.jsonl" not in os.listdir():
+            # only save if there is no file
+            yield "Getting Timetable"
+            self.save_timetable(login=False)
         yield "Getting Behaviour"
         self.save_behaviour(login=False)
         yield "Getting Attendance"
@@ -72,7 +74,7 @@ class ClassCharts:
 
         yield "All data saved"
 
-    def save_timetable(self, date=None, file_name="timetable.jsonl", login=True):
+    def save_timetable(self, date=None, login=True):
         if login: self.login()
         # Query API
         if date is None:
@@ -134,6 +136,7 @@ class ClassCharts:
         timetable = sorted(timetable, key=lambda x: x["start"]) # I am so proud of this one-liner lol
 
         # Write data to file
+        file_name = f"timetable_{date}.jsonl"
         with open(file_name, "w") as f:
             for event in timetable:
                 ujson.dump(event, f)
