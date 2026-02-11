@@ -15,8 +15,8 @@ NTP_HOST = "pool.ntp.org"
 WIFI_TIMEOUT = 20
 # Force offline mode
 FORCE_OFFLINE = False
-# Maximum number of additional timetable files
-MAX_EXTRA_TIMETABLES = 10
+# Maximum number of timetable files
+MAX_TIMETABLES = 10
 # Break times:
 # "name" is the displayed name of the break e.g. "Break" or "Lunch"
 # "start" and "end" are the times in "HH:MM" form when the break starts and ends

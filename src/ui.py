@@ -593,9 +593,12 @@ class TimetableChangeDate:
 
                 # check if max file count has been reached
                 files = [f for f in os.listdir() if "timetable_" in f]
-                if len(files) >= config.MAX_EXTRA_TIMETABLES:
+                if len(files) >= config.MAX_TIMETABLES:
                     # sort in order of creation date
                     sorted_files = sorted(files, key=lambda x: int(clock.date_to_secs(x.split("timetable_")[1].split(".jsonl")[0])))
+                    if not self.offline:
+                        # don't remove today's timetable
+                        sorted_files.remove(f"timetable_{clock.secs_to_date()}.jsonl")
                     # delete oldest one
                     os.remove(sorted_files[0])
 
