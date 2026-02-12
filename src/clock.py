@@ -37,13 +37,19 @@ def get_date(secs=None): # Returns a date string from timestamp
 
     return f"{day} {time[2]} {month}"
     
-def clock_str_to_secs(clock_str=get_clock()):
+def clock_str_to_secs(clock_str=get_clock(), date=None):
     # Returns timestamp from a time in HH:MM form
-    current_time = utime.localtime()
 
-    year = current_time[0]
-    month = current_time[1]
-    day = current_time [2]
+    if date is None:
+        current_time = utime.localtime()
+        year = current_time[0]
+        month = current_time[1]
+        day = current_time[2]
+    else:
+        year = int(date[0:4])
+        month = int(date[5:7])
+        day = int(date[8:10])
+
     hour = int(clock_str[0:2])
     min = int(clock_str[3:5])
 

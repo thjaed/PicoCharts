@@ -110,8 +110,8 @@ class ClassCharts:
                 "teacher": teacher,
                 "room": room,
                 "time": f"{start_time} to {end_time}",
-                "start": clock.clock_str_to_secs(start_time),
-                "end": clock.clock_str_to_secs(end_time),
+                "start": clock.clock_str_to_secs(clock_str=start_time, date=date),
+                "end": clock.clock_str_to_secs(clock_str=end_time, date=date),
                 "period_num": period_code,
                 "type": "lesson",
                 "date": date
@@ -126,8 +126,8 @@ class ClassCharts:
                     {
                         "name": b["name"],
                         "time": f"{start} to {end}",
-                        "start": clock.clock_str_to_secs(start),
-                        "end": clock.clock_str_to_secs(end),
+                        "start": clock.clock_str_to_secs(start, date=date),
+                        "end": clock.clock_str_to_secs(end, date=date),
                         "type": "break"
                     }
                 )

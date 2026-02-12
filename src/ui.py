@@ -240,11 +240,13 @@ class Timetable:
         self.data = []
         if file_name in os.listdir():
             with open(file_name, "r") as f:
+                time = utime.time()
                 for l in f:
                     l = ujson.loads(l)
-                    if ((state.Clock.rtc_set and l.get("end") > utime.time()) or
-                        (not state.Clock.rtc_set) or
-                        (state.Clock.rtc_set and self.date != clock.secs_to_date())):
+                    if (
+                        (state.Clock.rtc_set and l.get("end") > time) or # if in future
+                        (not state.Clock.rtc_set) or # if clock not set
+                        (self.date != clock.secs_to_date())): # if this is not today's timetable
                         self.data.append(l)
         else:
             message.show("No timetable file!")
