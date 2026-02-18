@@ -3,7 +3,7 @@
 ###########################
 
 # Enable Adafruit LC709203F battery fuel guage
-ENABLE_BATTERY_GUAGE = True
+ENABLE_BATTERY_GAUGE = True
 # Offset in seconds from UTC
 TZ_OFFSET_SEC = 0
 # Time screen takes to sleep in seconds

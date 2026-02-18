@@ -9,7 +9,7 @@ import clock
 import wifi
 import config
 import state
-if config.ENABLE_BATTERY_GUAGE: import battery
+if config.ENABLE_BATTERY_GAUGE: import battery
 
 classcharts = ClassCharts()
 message = ui.message
@@ -192,7 +192,7 @@ def init():
     # Startup sequence
     led.update("booting", True)
     bootscreen.draw()
-    if config.ENABLE_BATTERY_GUAGE:
+    if config.ENABLE_BATTERY_GAUGE:
         bootscreen.print("Initialising Battery")
         battery.init()
     for text in wifi.wifi_connect():
