@@ -616,8 +616,6 @@ class TimetableChangeDate:
                 utime.sleep(1)
                 timetable.go()
 
-timetable_chage_date = TimetableChangeDate()
-
 class Behaviour:
     def __init__(self):
         # Variables
@@ -1118,9 +1116,6 @@ class Menu:
                 self.draw()
 
 class Message:
-    def __init__(self):
-        self.text = ""
-
     def show(self, text):
         global page
         
