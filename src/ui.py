@@ -4,8 +4,8 @@ import ujson # type: ignore
 import os
 import utime # type: ignore
 
-import battery
 import config
+if config.ENABLE_BATTERY_GUAGE: import battery
 import clock
 import state
 from classcharts import ClassCharts
@@ -170,7 +170,7 @@ class MenuBar:
             display.text(time, 0, 0, scale=2) # Clock
             display.text(date, int((clock_width + (290 - clock_width) / 2) - (date_width / 2)), 0, scale=2) # Date
 
-        if state.Battery.connected:
+        if config.ENABLE_BATTERY_GUAGE and state.Battery.connected:
             #Battery Icon
             battery_level = battery.percentage()
             display.set_pen(WHITE)

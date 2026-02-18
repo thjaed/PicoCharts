@@ -62,7 +62,7 @@ def set_time_ntp():
     NTP_DELTA = 2208988800
     NTP_QUERY = bytearray(48)
     NTP_QUERY[0] = 0x1B
-    addr = usocket.getaddrinfo(config.NTP_HOST, 123)[0][-1]
+    addr = usocket.getaddrinfo("pool.ntp.org", 123)[0][-1]
     s = usocket.socket(usocket.AF_INET, usocket.SOCK_DGRAM)
     try:
         s.settimeout(1)

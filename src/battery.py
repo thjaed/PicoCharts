@@ -1,5 +1,6 @@
 from machine import I2C, Pin # type: ignore
-from LC709203F_CR import LC709203F
+import config
+if config.ENABLE_BATTERY_GUAGE: from LC709203F_CR import LC709203F
 
 import state
 

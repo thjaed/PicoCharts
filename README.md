@@ -1,48 +1,81 @@
 # PicoCharts
+ PicoCharts is a pocket-sized embedded device that lets students view their timetable, homework, behaviour, and attendance without needing a phone. I built this device using a Raspberry Pi Pico 2 W and I am using an online API for the data (ClassCharts). Hence the name "PicoCharts".
 
- PicoCharts is a pocketable and versatile "school device". You can use it to view your timetable, behaviour, attendance and homework. I built this device using a Raspberry Pi Pico 2 W and I am using an online API for the data (ClassCharts). Hence the name "PicoCharts".
+ <img src="/hardware/front.jpg" alt="Front" width="400">
 
-## Why?
-
- After my school banned the use of moblie phones, I had the idea of creating a device that could let me view my timetable at school. This was also a good oppourtunity to improve my hardware design & soldering skills, and to improve my programming.
-
-## About
-
- The project started by just reading an exported calendar file from outlook, but quickly grew after I upgraded to the Pico 2 W with wireless connectivity. I found documentation for the API for the platform my school uses, thank you to the creators of https://classchartsapi.github.io/api-docs/, without this community resource my project would not have been possible. I developed a python & micropython wrapper for the API (https://github.com/thjaed/classcharts-api-python) which is accessible for anyone else wanting to intergrate with the ClassCharts API.
+## Backstory
+ After my school banned the use of mobile phones, I had the idea of creating a device that could let me view my timetable at school. This was also a good opportunity to improve my hardware design & soldering skills, and to improve my programming.
+ 
+ The project started by just reading an exported calendar file from Outlook (project [cal-pal](https://github.com/thjaed/cal-pal)), but quickly grew after I upgraded to the Pico 2 W with wireless connectivity. I found documentation for the API of the platform my school uses, thank you to the creators of https://classchartsapi.github.io/api-docs/, without this community resource my project would not have been possible. I developed a Python & MicroPython wrapper for the API (https://github.com/thjaed/classcharts-api-python) which is accessible for anyone else wanting to integrate with the ClassCharts API.
 
 ## Features
  Here are some features of PicoCharts:
 
-### Timetable
- - Label next to lessons that have homework due in on
- - Timetables for different days can be viewed
- - Custom breaks can be added, e.g. Lunch or Break
- - 'Next' label on lessons
- - Lessons in the past are automatically removed
- - Auto-updates after a new day
- - View timetables for different days and store them offline
+ ### Timetable
+  - Label next to lessons with homework due
+  - Timetables for different days can be viewed
+  - Custom breaks can be added, e.g. Lunch or Break
+  - 'Next' label on lessons
+  - Lessons in the past are automatically removed
+  - Auto-updates after a new day
+  - View timetables for different days and store them offline
 
-### Behaviour
- - Easily choose a time range (Since August, This Week or Last Week)
+ ### Homework
+  - Front LED turns on if there is unseen homework
+  - Description can be viewed by clicking on a homework task
+  - Due-date colour coded to make it clear if a homework is late or not
+  - Homework marked as seen on ClassCharts when it is clicked on
 
-### Attendance
- - Colour-coded background based on percentage
- - Easily choose a time range (Since August, This Week or Last Week)
+ ### Attendance
+  - Colour-coded background based on percentage
+  - Easily choose a time range (Since August, This Week or Last Week)
 
-### Homework
- - Front LED turns on if there is unseen homework
- - Description can be viewed by clicking on homework task
- - Due-date colour coded to make it clear if a homework is late or not
- - Homework marked as seen on ClassCharts when it is clicked on
+ ### Behaviour
+  - Easily choose a time range (Since August, This Week or Last Week)
 
-## Use of AI generated code
+## Using PicoCharts yourself
+ To use PicoCharts, all you need is a Raspberry Pi Pico 2 W and a Pimoroni Pico Display Pack 2.0" (No soldering required, just attach a headered Pico 2 W to the back of the Pico Display). The Pico LiPo SHIM is only required if you want to use PicoCharts with a battery and the Adafruit LC709203F is only required if you want the battery percentage in the corner of the screen. Note that you will need to solder these battery boards.
 
- During this project, I kept the use of AI generated code to a minimum  as I wanted to learn things and be satisfied with what I had acomplished.
+ In terms of software, you need to install [Pimoroni's MicroPython build](https://github.com/pimoroni/pimoroni-pico-rp2350/releases/latest) to your Pico. Then copy everything in the [src](/src/) folder to your Pico. You can do this in the IDE 'Thonny'.
+ 
+ Make sure to modify [secrets.py](/src/secrets.py), this is where you put your ClassCharts login details and WiFi networks.
+ 
+ In [config.py](/src/config.py), you can change settings such as timezone and brightness. This is also where you define what times your breaks are, so make sure to change the times to reflect your school day. Disable ENABLE_BATTERY_gauge (enabled by default) if you are not using the battery gauge.
 
- With that being said, I did use some AI in my code, which I have labeled with comments to make it clear. I used AI in working out scrolling logic (although I have sinced replaced some of this with my own code) as well as some functions to do with working out dates, e.g. what was the date 1 month ago? 1 week ago? this monday? etc. I used AI for this because dates are incredibly boring and difficult to work with, and I didn't want this to be a burden.
+ If you decide to replicate my hardware, there are [STL Files](/hardware/stl_files/) for my design.
+
+## Hardware
+ ### I used the following hardware:
+  - Pimoroni Pico Display Pack 2.0" - this is the screen and has the built in buttons and RGB LED
+  - Raspberry Pi Pico 2W
+  - Adafruit LC709203F battery fuel gauge - measure the charge level of the battery
+  - Pimoroni Pico LiPo SHIM
+  - USB-C breakout board with 512K resistors (so it works with modern chargers)
+  - 1200mAh LiPo battery
+
+At the start, I was using the Pico Display with the Pico plugged in to the headers on the back. But this made the device too thick so I decided to remove the headers from the display and solder 30 AWG wire directly. In the process of removing the headers I accidentally ripped off some pads (I had bad equipment) including the 3V supply. But luckily I traced it back to a resistor and soldered on to it, which saved the screen.
+
+I used a USB-C breakout board to add USB-C. I soldered to the touch pads underneath the Pi to get USB data signals working over it, so I can program the Pi through the USB-C port as well.
+
+ ### Wiring diagram
+  <img src="/hardware/wiring-diagram.jpg" alt="Wiring Diagram" width="400">
+
+ ### Internals
+  <img src="/hardware/internals.jpg" alt="Internals" width="400">
+  
+ ### Back
+  <img src="/hardware/back.jpg" alt="Back" width="400">
+
+## Software
+ ### High-level overview
+  PicoCharts gets and displays data by first requesting data from the ClassCharts API. This happens at bootup and at a set interval, when the device is sleeping. This data is then simplified and saved into a JSON file in the flash storage. When a page is opened on the device, the corresponding file is read and loaded into a list. This list is then read by a draw function, which then puts the data on the screen inside scrollable pages and organised boxes.
+
+  If the user requests to view the timetable for a different day and the JSON file for that day is not saved, then the data is requested and saved into a new JSON file. If the file already exists, it is opened with little to no waiting.
+ 
+ ### Use of AI generated code
+  AI was used selectively for complex date arithmetic and initial scrolling logic. All AI-assisted code is clearly commented.
 
 ## Acknowledgements
-
  In this project I used:
 
  - pybuttons by @oscaracena - https://github.com/oscaracena/pybuttons

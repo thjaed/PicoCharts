@@ -9,7 +9,7 @@ import clock
 import wifi
 import config
 import state
-import battery
+if config.ENABLE_BATTERY_GUAGE: import battery
 
 classcharts = ClassCharts()
 message = ui.message
@@ -171,11 +171,11 @@ async def sleep_handler():
         await asyncio.sleep(1)
 
 async def update_data():
-    await asyncio.sleep(1200)
+    await asyncio.sleep(config.DATA_UPDATE_INTERVAL)
     # Periodically updates data
     while True:
         get_data(print_type="console", background=True)
-        await asyncio.sleep(1200)
+        await asyncio.sleep(config.DATA_UPDATE_INTERVAL)
 
 async def connection_tester():
     # Periodically check for wifi connectivity
@@ -192,8 +192,9 @@ def init():
     # Startup sequence
     led.update("booting", True)
     bootscreen.draw()
-    bootscreen.print("Initialising Battery")
-    battery.init()
+    if config.ENABLE_BATTERY_GUAGE:
+        bootscreen.print("Initialising Battery")
+        battery.init()
     for text in wifi.wifi_connect():
         bootscreen.print(text)
     if state.WiFi.connected:

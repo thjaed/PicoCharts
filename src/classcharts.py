@@ -63,7 +63,7 @@ class ClassCharts:
         self.login()
         yield "Getting Homework"
         self.save_homework(login=False)
-        if f"timetable_{clock.secs_to_date()}.jsonl" not in os.listdir():
+        if state.Clock.rtc_set and f"timetable_{clock.secs_to_date()}.jsonl" not in os.listdir():
             # only save if there is no file
             yield "Getting Timetable"
             self.save_timetable(login=False)
