@@ -213,28 +213,13 @@ class Timetable:
         page = "timetable"
         self.scroll_distance = 0
 
-        if date is None and not state.Clock.rtc_set:
-            # point to earliest file
-            available_files = [f.split("timetable_")[1].split(".jsonl")[0] for f in os.listdir() if "timetable_" in f]
-            if len(available_files) > 0:
-                available_files = sorted(available_files, key=clock.date_to_secs)
-                self.date = available_files[0]
-            else:
-                # last resort if offline and no files
-                self.date = None
-
-        elif date is None:
-            # today
-            self.date = clock.secs_to_date()
-
-        else:
-            # point to specified file
-            self.date = date
+        # today
+        self.date = clock.secs_to_date()
 
         # show blue date banner
         self.show_date = (not state.Clock.rtc_set) or (self.date != clock.secs_to_date())
 
-        file_name = f"timetable_{self.date}.jsonl"
+        file_name = f"timetable.jsonl"
 
         # Load data from file into self.data
         self.data = []

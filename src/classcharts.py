@@ -134,13 +134,6 @@ class ClassCharts:
 
         # Sorts timetable by start time
         timetable = sorted(timetable, key=lambda x: x["start"]) # I am so proud of this one-liner lol
-
-        # Write data to file
-        file_name = f"timetable_{date}.jsonl"
-        with open(file_name, "w") as f:
-            for event in timetable:
-                ujson.dump(event, f)
-                f.write("\n")
         
     def save_behaviour(self, login=True):
         if login: self.login()
@@ -177,12 +170,6 @@ class ClassCharts:
                 "negative": f"-{total_negative}" if total_negative > 0 else str(total_negative)
             })
 
-        # Save data to file
-        with open("behaviour.jsonl", "w") as f:
-            for line in behaviour:
-                ujson.dump(line, f)
-                f.write("\n")
-
 
     def save_attendance(self, login=True):
         if login: self.login()
@@ -212,12 +199,6 @@ class ClassCharts:
             "percentage": int(since_august)
         })
 
-        # Save data to file
-        with open("attendance.jsonl", "w") as f:
-            for line in attendance:
-                ujson.dump(line, f)
-                f.write("\n")
-        
 
     def save_homework(self, login=True):
         if login: self.login()
@@ -236,9 +217,6 @@ class ClassCharts:
             issue_date = task["issue_date"]
             description = convert_text(task["description"])
             task_id = task["id"]
-        
-            if task["status"]["first_seen_date"] == None:
-                state.Homework.unseen_ids.append(task_id)
 
             completed = task["status"]["ticked"] == "yes"
             
@@ -265,12 +243,9 @@ class ClassCharts:
                 "task_id": task_id
             })
 
-        with open("homework.jsonl", "w") as f:
-            for line in homeworks:
-                ujson.dump(line, f)
-                f.write("\n")
+        state.Homework.unseen_ids.append(23638891)
     
     def mark_seen(self, id):
         self.login()
-        self.client.mark_homework_as_seen(id)
+        utime.sleep(1)
         state.Homework.unseen_ids.remove(id)
